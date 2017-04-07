@@ -22,6 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "firebase-admin": "^4.2.0",
+    "shopify-api-node": "^2.4.0",
     "shopify-token": "^3.0.0"
   }
 }

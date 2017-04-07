@@ -1,8 +1,13 @@
 var auth = {};
 var utilities = {};
+var api = {};
 
 const ShopifyToken = require('shopify-token');
+const ShopifyApi = require('shopify-api-node'); // https://github.com/microapps/Shopify-api-node
 const Firebase = require('firebase-admin');
+
+const util = require('util');
+const extend = util._extend;
 
 /**
  * Get CURRENT_LOGGED_IN_SHOP from CURRENT_LOGGED_IN_SHOP.myshopify.com
@@ -17,6 +22,23 @@ utilities.getShopifyAppUrl = (shop, apiKey) => {
 }
 
 /**
+ * Merge/flatten an array of arrays
+ * @see http://stackoverflow.com/a/10865042/1465919
+ */
+utilities.flattenArrayOfArray = function (arrays) {
+  return [].concat.apply([], arrays);
+}
+
+auth.initFirebase = (appName, firebaseServiceAccount, firebaseDatabaseURL ) => {
+  var firebase = Firebase.initializeApp({
+    credential: Firebase.credential.cert(firebaseServiceAccount),
+    databaseURL: firebaseDatabaseURL,
+  }, appName);
+
+  return firebase;
+}
+
+/**
  * @param appName
  * @param shopifyConfig
  * @param firebaseServiceAccount (optional)
@@ -28,10 +50,7 @@ auth.init = (appName, shopifyConfig, firebaseServiceAccount, firebaseDatabaseURL
   result.shopify = new ShopifyToken(shopifyConfig);
 
   if(firebaseServiceAccount !== null && typeof(firebaseServiceAccount) === 'object') {
-    result.firebase = Firebase.initializeApp({
-      credential: Firebase.credential.cert(firebaseServiceAccount),
-      databaseURL: firebaseDatabaseURL,
-    }, appName);
+    result.firebase = auth.initFirebase(appName, firebaseServiceAccount, firebaseDatabaseURL);
   }
 
   return result;
@@ -110,7 +129,43 @@ auth.signInFirebaseTemplate = (shop, appName, shopifyAccessToken, shopifyApiKey,
     </script>`;
 }
 
+api.definitions = require('./api-definitions');
+
+/**
+ * Get all params from express query wich compatible with the shopify api
+ */
+api.parseParamsQuery = (query) => {
+  var result = {
+    params: extend({}, query),
+  };
+  delete result.params.callback;
+  delete result.params._;
+
+  var possibleArgs = ["id", "blogId", "themeId", "id", "customerId", "orderId", "fulfillmentId",
+                        "productId", "countryId", "recurringApplicationChargeId"];
+
+  var paramName;
+
+  for (var i=0; i<possibleArgs.length; i++) {
+    paramName=possibleArgs[i];
+    if (result.params[paramName])
+      result[paramName]=result.params[paramName];
+      delete result.params[paramName];
+  }
+
+  return result;
+}
+
+api.init = (shopName, shopifyAccessToken) => {
+  var shopify = new ShopifyApi({
+    shopName: shopName,
+    accessToken: shopifyAccessToken,
+  });
+  return shopify;
+}
+
 module.exports = {
   utilities: utilities,
   auth: auth,
+  api: api,
 }
