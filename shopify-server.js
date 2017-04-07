@@ -1,7 +1,20 @@
 var auth = {};
+var utilities = {};
 
 const ShopifyToken = require('shopify-token');
 const Firebase = require('firebase-admin');
+
+/**
+ * Get CURRENT_LOGGED_IN_SHOP from CURRENT_LOGGED_IN_SHOP.myshopify.com
+ */
+utilities.getShopName = (shop) => {
+  return shop.substring(0, shop.indexOf("."));
+};
+
+
+utilities.getShopifyAppUrl = (shop, apiKey) => {
+  return 'https://'+shop+'/admin/apps/'+apiKey
+}
 
 /**
  * @param appName
@@ -24,21 +37,12 @@ auth.init = (appName, shopifyConfig, firebaseServiceAccount, firebaseDatabaseURL
   return result;
 }
 
-var utilities = {};
-
-/**
- * Get CURRENT_LOGGED_IN_SHOP from CURRENT_LOGGED_IN_SHOP.myshopify.com
- */
-utilities.getShopName = (shop) => {
-  return shop.substring(0, shop.indexOf("."));
-};
-
 /**
  * Creates a Firebase custom auth token for the given Shopify user ID.
  *
  * @returns {Object} The Firebase custom auth token and the uid.
  */
-utilities.createFirebaseCustomAuth = (firebaseApp, appName, shopifyStore, cb) => {
+auth.createFirebaseCustomAuth = (firebaseApp, appName, shopifyStore, cb) => {
   // The UID we'll assign to the user.
   var uid = `shopify:${shopifyStore.replace(/\./g, '-')}`; // replace . (dot) with - (minus) because: Paths must be non-empty strings and can't contain ".", "#", "$", "[", or "]"
 
@@ -46,7 +50,7 @@ utilities.createFirebaseCustomAuth = (firebaseApp, appName, shopifyStore, cb) =>
   firebaseApp.auth().createCustomToken(uid)
   .then((customToken) => {
     // Send token back to client
-    console.log('Created Custom token for UID "', uid, '" Token:', customToken);
+    // console.log('Created Custom token for UID "', uid, '" Token:', customToken);
     return cb(null, {
       token: customToken,
       uid: uid,
@@ -58,10 +62,6 @@ utilities.createFirebaseCustomAuth = (firebaseApp, appName, shopifyStore, cb) =>
   });
 }
 
-utilities.getShopifyAppUrl = (shop, apiKey) => {
-  return 'https://'+shop+'/admin/apps/'+apiKey
-}
-
 /**
  * Generates the HTML template that:
  *  - Signs the user in Firebase using the given token
@@ -69,7 +69,7 @@ utilities.getShopifyAppUrl = (shop, apiKey) => {
  *  - Saves the Shopify AccessToken to the Realtime Database
  *  - Closes the popup
  */
-utilities.signInFirebaseTemplate = (shop, appName, shopifyAccessToken, shopifyApiKey, firebaseToken, firebaseProjectId, firebaseApiKey) => {
+auth.signInFirebaseTemplate = (shop, appName, shopifyAccessToken, shopifyApiKey, firebaseToken, firebaseProjectId, firebaseApiKey) => {
   return `
     <script src="https://www.gstatic.com/firebasejs/3.7.5/firebase.js"></script>
     <script>
@@ -109,7 +109,6 @@ utilities.signInFirebaseTemplate = (shop, appName, shopifyAccessToken, shopifyAp
       });
     </script>`;
 }
-
 
 module.exports = {
   utilities: utilities,
