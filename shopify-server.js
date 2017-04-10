@@ -204,13 +204,13 @@ auth.koa = (opts, app) => {
     /**
      * Redirects the User to the Shopify authentication consent screen. Also the 'state' session is set for later state verification.
      */
-    .get('/redirect/:appName/:shopName', (ctx) => {
+    .get(`/redirect/${opts.appName}/:shopName`, (ctx) => {
 
-      const appName = ctx.params.appName;
+      const appName = opts.appName;
       const shopName = ctx.params.shopName;
       var session = ctx[opts.contextStorageKey];
 
-      auth.debug('/redirect/:appName/:shopName', 'appName', appName, 'shopName', shopName);
+      auth.debug(`/redirect/${opts.appName}/:shopName`, 'shopName', shopName);
 
       if(!session[appName]) {
         session[appName] = {};
@@ -250,13 +250,13 @@ auth.koa = (opts, app) => {
      * Session Fixation attacks.
      * This is meant to be used by Web Clients.
     */
-    .get('/shopify-callback/:appName', async (ctx, next) => {
+    .get(`/shopify-callback/${opts.appName}`, async (ctx, next) => {
       const state = ctx.query.state;
-      const appName = ctx.params.appName;
+      const appName = opts.appName;
       const shopName = utilities.getShopName(ctx.query.shop);
       var session = ctx[opts.contextStorageKey];
 
-      auth.debug('/shopify-callback/:appName', 'ctx.query', ctx.query, 'ctx.params', ctx.params, 'session', session);
+      auth.debug(`/shopify-callback/${opts.appName}`, 'ctx.query', ctx.query, 'ctx.params', ctx.params, 'session', session);
 
       if(!session[appName]) {
         session[appName] = {};
@@ -303,12 +303,12 @@ auth.koa = (opts, app) => {
     * Get token
     * TODO Is this safe through sessions?
     */
-    .get('/token/:appName/:shopName', (ctx) => {
-      const appName = ctx.params.appName;
+    .get(`/token/${opts.appName}/:shopName`, (ctx) => {
+      const appName = opts.appName;
       const shopName = ctx.params.shopName;
       var session = ctx[opts.contextStorageKey];
 
-      auth.debug('/token/:appName/:shopName', 'appName', appName, 'shopName', shopName);
+      auth.debug(`/token/${opts.appName}/${shopName}`);
 
       if( session[appName] && session[appName][shopName] && session[appName][shopName].firebaseToken ) {
         ctx.jsonp = {
