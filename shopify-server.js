@@ -315,7 +315,12 @@ auth.koa = (opts, app) => {
           firebaseToken: session[appName][shopName].firebaseToken,
         }
       } else {
-        ctx.throw(404, 'Not Found');
+        ctx.status = 404;
+        ctx.jsonp = {
+          status: 404,
+          message: 'Not Found'
+        }
+        // ctx.throw(404, 'Not Found');
       }
 
     })
