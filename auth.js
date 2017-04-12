@@ -1,5 +1,5 @@
 const ShopifyToken = require('shopify-token');  // https://github.com/lpinca/shopify-token
-const Debug = require('debug')  // https://github.com/visionmedia/debug
+const Debug = require('debug');  // https://github.com/visionmedia/debug
 
 const utilities = require('./utilities.js');
 
@@ -128,16 +128,15 @@ auth.koa = (opts, app) => {
     throw new Error('shopify config object is required');
   }
   
-  if(opts.firebaseServiceAccount === null || typeof(opts.firebaseServiceAccount) !== 'object') {
-    throw new Error('firebase service account config for admin sdk object is required, see https://firebase.google.com/docs/admin/setup');
-  }
-
   if(opts.firebaseWebAppConfig === null || typeof(opts.firebaseWebAppConfig) !== 'object') {
     throw new Error('firebase config object for web apps is required, see https://firebase.google.com/docs/web/setup');
   }
 
+  if(opts.firebaseApp === null || typeof(opts.firebaseApp) !== 'object') {
+    throw new Error('firebase app is required');
+  }
+
   const shopifyToken = auth.init(opts.shopifyConfig);
-  const firebaseApp = utilities.initFirebase(opts.appName, opts.firebaseServiceAccount, opts.firebaseWebAppConfig.databaseURL);
 
   // init json and jsonp middleware / api
   app.use(json({ pretty: false, param: 'pretty' }));
@@ -224,23 +223,23 @@ auth.koa = (opts, app) => {
       * Exchange the authorization code for a permanent access token.
       */
       await shopifyToken.getAccessToken(ctx.query.shop, ctx.query.code)
-        .then((shopifyAccessToken) => {
-          auth.debug('Resive Token:', shopifyAccessToken);
-          session[appName][shopName].shopifyToken = shopifyAccessToken;
-          return auth.createFirebaseCustomAuth(firebaseApp, appName, ctx.query.shop); //, (err, firebaseAuth) => {
-        })
-        .then((customToken) => {
-          session[appName][shopName].firebaseToken = customToken;
-          session[appName][shopName].firebaseUid = auth.getFirebaseUID(ctx.query.shop);
-          session[appName][shopName].state = undefined;
+      .then((shopifyAccessToken) => {
+        auth.debug('Resive Token:', shopifyAccessToken);
+        session[appName][shopName].shopifyToken = shopifyAccessToken;
+        return auth.createFirebaseCustomAuth(opts.firebaseApp, appName, ctx.query.shop); //, (err, firebaseAuth) => {
+      })
+      .then((customToken) => {
+        session[appName][shopName].firebaseToken = customToken;
+        session[appName][shopName].firebaseUid = auth.getFirebaseUID(ctx.query.shop);
+        session[appName][shopName].state = undefined;
 
-          // Serve an HTML page that signs the user in and updates the user profile.
-          const template = auth.signInFirebaseTemplate(ctx.query.shop, appName, session[appName][shopName].shopifyToken, opts.shopifyConfig.apiKey, session[appName][shopName].firebaseToken, opts.firebaseServiceAccount.project_id, opts.firebaseWebAppConfig.apiKey);
-          ctx.body = template;
-        })
-        .catch((err) => {
-          ctx.throw(500, err); // err.stack
-        });
+        // Serve an HTML page that signs the user in and updates the user profile.
+        const template = auth.signInFirebaseTemplate(ctx.query.shop, appName, session[appName][shopName].shopifyToken, opts.shopifyConfig.apiKey, session[appName][shopName].firebaseToken, opts.firebaseWebAppConfig.projectId, opts.firebaseWebAppConfig.apiKey);
+        ctx.body = template;
+      })
+      .catch((err) => {
+        ctx.throw(500, err); // err.stack
+      });
 
     })
 

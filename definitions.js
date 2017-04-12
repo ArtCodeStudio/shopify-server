@@ -1,5 +1,18 @@
-module.exports={
-  
+module.exports = (opts) => {
+
+  if(typeof(opts.appName) !== 'string') {
+    opts.appName = 'shopify-app';
+  }
+
+  if(typeof(opts.baseUrl) !== 'string') {
+    opts.baseUrl = `/api/${opts.appName}/:shopName`;
+  }
+
+  var definitions = {
+    debug: require('debug')('shopify-server:definitions')
+  }
+
+  definitions.api = {
     apiPermission: {
       delete: { args: [] },
     },
@@ -28,7 +41,7 @@ module.exports={
     },
     blog: {
       count: { args: [] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -66,7 +79,7 @@ module.exports={
     },
     country: {
       count: { args: [] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -139,7 +152,7 @@ module.exports={
       update: { args: ['orderId', 'fulfillmentId', 'id', 'params']},
     },
     fulfillmentService: {
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id'] },
       list: { args: ['(params)'] },
@@ -147,11 +160,11 @@ module.exports={
     },
     giftCard: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       disable: { args: ['id'] },
       get: { args: ['id'] },
       list: { args: ['(params)'] },
-      search: { args: [, 'params']},
+      search: { args: ['params']},
       update: { args: ['id', 'params']},
     },
     location: {
@@ -160,7 +173,7 @@ module.exports={
     },
     metafield: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -170,7 +183,7 @@ module.exports={
       cancel: { args: ['id', '(params)'] },
       close: { args: ['id'] },
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -186,7 +199,7 @@ module.exports={
     },
     page: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -197,7 +210,7 @@ module.exports={
     },
     product: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -227,14 +240,14 @@ module.exports={
     },
     recurringApplicationCharge: {
       activate: { args: ['id', 'params']},
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
     },
     redirect: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -245,7 +258,7 @@ module.exports={
     },
     scriptTag: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -259,7 +272,7 @@ module.exports={
     },
     smartCollection: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -267,7 +280,7 @@ module.exports={
       update: { args: ['id', 'params']},
     },
     theme: {
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
@@ -291,11 +304,50 @@ module.exports={
     },
     webhook: {
       count: { args: ['(params)'] },
-      create: { args: [, 'params']},
+      create: { args: ['params']},
       delete: { args: ['id'] },
       get: { args: ['id', '(params)'] },
       list: { args: ['(params)'] },
       update: { args: ['id', 'params']},
     },
+  };
 
-};
+
+  for (var resourceName in definitions.api) {
+    var resource = definitions.api[resourceName];
+    definitions.debug(resourceName);
+
+    for (var methodName in resource) {
+      var method = resource[methodName];
+      method.url = `${opts.baseUrl}/${resourceName}/${methodName}`;
+
+      /*
+       * Parse args to show if it is optional or not
+       */
+      method.parsedArgs = [];
+      for (var i = 0; i < method.args.length; i++) {
+        var arg = {
+          name: method.args[i],
+          position: i,
+          isOptional: false,
+        }
+
+        var lastCharIndex = arg.name.length - 1;
+        var firstChar = arg.name.charAt(0);
+        var lastChar = arg.name.charAt(lastCharIndex);
+
+        if(firstChar === '(' && lastChar === ')') {
+          arg.name = arg.name.substring(1, lastCharIndex);
+          arg.isOptional = true;
+        }
+        method.parsedArgs.push(arg);
+      }
+
+      definitions.debug(`\t${resourceName}.${methodName}(${method.args}) -> ${method.url}\n`, method);
+      
+    }
+
+  }
+
+  return definitions.api;
+}
