@@ -9,15 +9,42 @@ var api = {
 
 
 /**
- * Get all params from express query wich compatible with the shopify api
+ * Get all params from koa-router query wich compatible with the shopify api
  */
-api.parseParamsQuery = (query, methodParsedArgs) => {
-  api.debug("TODO methodParsedArgs", methodParsedArgs);
+api.parseJsonQuery = (jsonQueryString, methodParsedArgs) => {
+  return new Promise((fulfill, reject) => {
 
-  args = [];
+    const json = JSON.parse(jsonQueryString);
+    api.debug('jsonQueryString', jsonQueryString, 'json', json, 'methodParsedArgs', methodParsedArgs);
+    var resultArgs = [];
 
+    if(json === null || typeof(json) !== 'object' || json === {} ) {
+      return fulfill(resultArgs);
+    }
 
-  return args;
+    if(methodParsedArgs.length <= 0) {
+      return fulfill(resultArgs);
+    }
+
+    // push found args to resultArgs
+    for (var i = 0; i < methodParsedArgs.length; i++) {
+      var arg = methodParsedArgs[i];
+      if(typeof(json[arg.name]) !== 'undefined' ) {
+        methodParsedArgs.isSet = true;
+        resultArgs.push(json[arg.name]);
+        api.debug(`arg ${arg.name} set to`, json[arg.name], arg);
+      } else {
+        // arg not set, check if it is required
+        if(arg.isOptional === false) {
+          return reject(`Arg ${arg.name} is required!`);
+        } else {
+          api.debug(`ignore arg ${arg.name}`);
+        }
+      }
+    }
+
+    return fulfill(resultArgs);
+  });
 }
 
 /**
@@ -108,12 +135,12 @@ api.koa = (opts, app) => {
   app.use(function(ctx, next){
     api.debug(`path: ${ctx.path}`);
 
-    if(ctx.params) {
+    if(ctx.params && ctx.params !== {}) {
       api.debug(`params: `, ctx.params);
     }
 
-    if(ctx.query) {
-      api.debug(`params: `, ctx.query);
+    if(ctx.query && ctx.query !== {}) {
+      api.debug(`query: `, ctx.query);
     }
     
     return next();
@@ -155,6 +182,63 @@ api.koa = (opts, app) => {
   });
 
   /**
+   * REST API to init Shopify by passing the shopify token as url param
+   */
+  var url = `${opts.baseUrl}/init/shopifytoken/:shopifyToken`;
+  api.debug(`init route: ${url}`);
+  router.get(url, async (ctx) => {
+    const appName = opts.appName;
+    const shopName = ctx.params.shopName;
+    const shopifyToken = ctx.params.shopifyToken;
+    var session = ctx[opts.contextStorageKey];
+
+    if( session[appName] === null || typeof (session[appName]) !== 'object' ) {
+      session[appName] = {};
+    }
+
+    if( session[appName][shopName] === null || typeof (session[appName][shopName]) !== 'object' ) {
+      session[appName][shopName] = {};
+    }    
+
+    session[appName][shopName].shopifyToken = shopifyToken;
+
+    // TODO: Do not init the api each request!
+    var shopify = api.init(shopName, session[appName][shopName].shopifyToken);
+
+    // Test request to check if api is working
+    await shopify.shop.get()
+    .then((shopData) => ctx.jsonp = shopData)
+    .catch((err) => {
+      ctx.throw(500, error.message);
+    });
+  });
+
+  /**
+   * REST API to test Shopify api if Shopify Token is already setted in session
+   */
+  var url = `${opts.baseUrl}/test`;
+  api.debug(`init route: ${url}`);
+  router.get(url, async (ctx) => {
+    const appName = opts.appName;
+    const shopName = ctx.params.shopName;
+    var session = ctx[opts.contextStorageKey];
+
+    if(!session[appName] || !session[appName][shopName] || !session[appName][shopName].shopifyToken) {
+      ctx.throw(401, 'Shopify Token not set');
+    }
+
+    // TODO: Do not init the api each request!
+    var shopify = api.init(shopName, session[appName][shopName].shopifyToken);
+
+    // Test request to check if api is working
+    await shopify.shop.get()
+    .then((shopData) => ctx.jsonp = shopData)
+    .catch((err) => {
+      ctx.throw(500, error.message);
+    });
+  });
+
+  /**
    * REST API to show which REST APIs are existing
    */
   var url = `${opts.baseUrl}/definitions`;
@@ -185,16 +269,22 @@ api.koa = (opts, app) => {
           ctx.throw(401, 'Shopify Token not set');
         }
 
+        if(ctx.query === null || typeof(ctx.query) !== 'object' || typeof(ctx.query.json) !== 'string') {
+          api.debug(`ctx.query`, ctx.query);
+          ctx.throw(401, 'Json query string is required');
+        }
+
         // TODO: Do not init the api each request!
         var shopify = api.init(shopName, session[appName][shopName].shopifyToken);
 
-        var args = api.parseParamsQuery(ctx.query, method.parsedArgs);
-
-        await shopify[resourceName][methodName](...args)
-          .then((result) => ctx.jsonp = result)
-          .catch((err) => {
-            ctx.throw(500, error.message);
-          });
+        await api.parseJsonQuery(ctx.query.json, method.parsedArgs)
+        .then((args) => {
+          return shopify[resourceName][methodName](...args)
+        })
+        .then((result) => ctx.jsonp = result)
+        .catch((err) => {
+          ctx.throw(500, err);
+        });
       });
       next();
     });
