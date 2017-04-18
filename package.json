@@ -21,6 +21,7 @@
   "author": "Pascal Garber",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.3.0",
     "debug": "^2.6.3",
     "firebase-admin": "^4.2.0",
     "koa-json": "^2.0.2",

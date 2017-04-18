@@ -1,5 +1,6 @@
 const ShopifyApi = require('shopify-api-node'); // https://github.com/microapps/Shopify-api-node
 const Debug = require('debug');                  // https://github.com/visionmedia/debug
+const async = require('async');
 
 const utilities = require('./utilities.js');
 
@@ -246,6 +247,57 @@ api.koa = (opts, app) => {
   router.get(url, (ctx) => {
     ctx.body = api.definitions;
   });
+
+  /**
+   * Custom Api product/listAll implementation
+   */
+  var url = `${opts.baseUrl}/product/listAll`;
+  api.debug(`init route: ${url}`);
+  router.get(url, async (ctx) => {
+    const productsPerPage = 250;
+    const appName = opts.appName;
+    const shopName = ctx.params.shopName;
+    const session = ctx[opts.contextStorageKey];
+
+    if(!session[appName] || !session[appName][shopName] || !session[appName][shopName].shopifyToken) {
+      ctx.throw(401, 'Shopify Token not set');
+    }
+
+    // TODO: Do not init the api each request!
+    const shopify = api.init(shopName, session[appName][shopName].shopifyToken);
+
+    await shopify.product.count()
+    .then((count) => {
+      var pages = Math.round(count / productsPerPage);
+      if(pages <= 0) {
+        pages = 1;
+      }
+
+      api.debug("count", count);
+      api.debug("pages", pages);
+
+      // TODO remove deps to async module by make this more promise like?
+      // use https://github.com/sindresorhus/p-times instead?
+      async.times(pages, (n, next) => {
+        n += 1;
+        api.debug("page", n);
+        shopify.product.list({limit: productsPerPage, page: n})
+        .then(products => {
+          next(null, products);
+        })
+        .catch(next);
+      }, (error, productsOfProducts) => {
+        if(error) {
+          return ctx.throw(500, error);
+        }
+        var products = shopifyServer.utilities.flattenArrayOfArray(productsOfProducts);
+        ctx.jsonp = products;
+      });
+    })
+    .catch((error) => {
+      ctx.throw(500, error);
+    });
+});
 
   /*
    * Init all routes for the Shopify REST API based on Shopify-api-node
