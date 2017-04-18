@@ -124,6 +124,10 @@ auth.koa = (opts, app) => {
     throw new Error('app name string is required');
   }
 
+  if(typeof(opts.baseUrl) !== 'string') {
+    opts.baseUrl = `/auth/${opts.appName}`;
+  }
+
   if(opts.shopifyConfig === null || typeof(opts.shopifyConfig) !== 'object') {
     throw new Error('shopify config object is required');
   }
@@ -156,7 +160,7 @@ auth.koa = (opts, app) => {
     /**
      * Redirects the User to the Shopify authentication consent screen. Also the 'state' session is set for later state verification.
      */
-    .get(`/redirect/${opts.appName}/:shopName`, (ctx) => {
+    .get(`${opts.baseUrl}/:shopName/redirect`, (ctx) => {
 
       const appName = opts.appName;
       const shopName = ctx.params.shopName;
@@ -195,7 +199,7 @@ auth.koa = (opts, app) => {
      * Session Fixation attacks.
      * This is meant to be used by Web Clients.
     */
-    .get(`/shopify-callback/${opts.appName}`, async (ctx, next) => {
+    .get(`${opts.baseUrl}/callback`, async (ctx, next) => {
       const state = ctx.query.state;
       const appName = opts.appName;
       const shopName = utilities.getShopName(ctx.query.shop);
@@ -247,7 +251,7 @@ auth.koa = (opts, app) => {
     * Get token
     * TODO Is this safe through sessions?
     */
-    .get(`/token/${opts.appName}/:shopName`, (ctx) => {
+    .get(`${opts.baseUrl}/:shopName/token`, (ctx) => {
       const appName = opts.appName;
       const shopName = ctx.params.shopName;
       var session = ctx[opts.contextStorageKey];

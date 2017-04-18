@@ -156,7 +156,7 @@ api.koa = (opts, app) => {
   });
 
   /**
-   * REST API to get Shopify Token from firebase and init the shopify api and set it to session
+   * REST API to get Shopify Token from firebase, init the shopify api and set the token to session
    */
   var url = `${opts.baseUrl}/init/:firebaseIdToken`;
   api.debug(`init route: ${url}`);
@@ -182,7 +182,7 @@ api.koa = (opts, app) => {
   });
 
   /**
-   * REST API to init Shopify by passing the shopify token as url param
+   * REST API to init Shopify by passing the shopify token as url param and set the token to session
    */
   var url = `${opts.baseUrl}/init/shopifytoken/:shopifyToken`;
   api.debug(`init route: ${url}`);
@@ -214,7 +214,7 @@ api.koa = (opts, app) => {
   });
 
   /**
-   * REST API to test Shopify api if Shopify Token is already setted in session
+   * REST API to test if the Shopify api is working
    */
   var url = `${opts.baseUrl}/test`;
   api.debug(`init route: ${url}`);
