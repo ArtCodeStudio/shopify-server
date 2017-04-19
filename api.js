@@ -1,3 +1,5 @@
+'use strict'
+
 const ShopifyApi = require('shopify-api-node'); // https://github.com/microapps/Shopify-api-node
 const Debug = require('debug');                  // https://github.com/visionmedia/debug
 const pTimes = require('p-times');
@@ -12,7 +14,7 @@ var api = {
 /**
  * Get all params from koa-router query wich compatible with the shopify api
  */
-api.parseJsonQuery = (jsonQueryString, methodParsedArgs) => {
+var parseJsonQuery = (jsonQueryString, methodParsedArgs) => {
   return new Promise((fulfill, reject) => {
 
     const json = JSON.parse(jsonQueryString);
@@ -49,6 +51,39 @@ api.parseJsonQuery = (jsonQueryString, methodParsedArgs) => {
 }
 
 /**
+ * Custom Api implementations for products 
+ */
+api.product = {};
+
+/**
+ * Custom Api implementation to get all products at once without pagination
+ */
+api.product.getAll = (shopify) => {
+  const productsPerPage = 250;
+
+  return shopify.product.count()
+  .then((count) => {
+    var pages = Math.round(count / productsPerPage);
+    if(pages <= 0) {
+      pages = 1;
+    }
+
+    api.debug("count", count);
+    api.debug("pages", pages);
+
+    return pTimes(pages, (n) => {
+      n += 1;
+      api.debug("page", n);
+      return shopify.product.list({limit: productsPerPage, page: n})
+    });
+  })
+  .then((productsOfProducts) => {
+    var products = utilities.flattenArrayOfArray(productsOfProducts);
+    return products;
+  });
+}
+
+/**
  * Get shopify token from firebase
  * @see https://firebase.google.com/docs/auth/server/verify-id-tokens
  */
@@ -79,6 +114,8 @@ api.getShopifyToken = (firebaseApp, firebaseIdToken) => {
     res.status(500).send(error.message);
   });
 }
+
+
 
 /**
  * 
@@ -143,7 +180,7 @@ api.koa = (opts, app) => {
     if(ctx.query && ctx.query !== {}) {
       api.debug(`query: `, ctx.query);
     }
-    
+
     return next();
   });
 
@@ -266,30 +303,14 @@ api.koa = (opts, app) => {
     // TODO: Do not init the api each request!
     const shopify = api.init(shopName, session[appName][shopName].shopifyToken);
 
-    await shopify.product.count()
-    .then((count) => {
-      var pages = Math.round(count / productsPerPage);
-      if(pages <= 0) {
-        pages = 1;
-      }
-
-      api.debug("count", count);
-      api.debug("pages", pages);
-
-      return pTimes(pages, (n) => {
-        n += 1;
-        api.debug("page", n);
-        return shopify.product.list({limit: productsPerPage, page: n})
-      });
-    })
-    .then((productsOfProducts) => {
-      var products = utilities.flattenArrayOfArray(productsOfProducts);
+    await api.product.getAll(shopify)
+    .then((products) => {
       ctx.jsonp = products;
     })
     .catch((error) => {
       ctx.throw(500, error);
     });
-});
+  });
 
   /*
    * Init all routes for the Shopify REST API based on Shopify-api-node
@@ -321,7 +342,7 @@ api.koa = (opts, app) => {
         // TODO: Do not init the api each request!
         var shopify = api.init(shopName, session[appName][shopName].shopifyToken);
 
-        await api.parseJsonQuery(ctx.query.json, method.parsedArgs)
+        await parseJsonQuery(ctx.query.json, method.parsedArgs)
         .then((args) => {
           return shopify[resourceName][methodName](...args)
         })
