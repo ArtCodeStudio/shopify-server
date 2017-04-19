@@ -1,11 +1,11 @@
 const ShopifyApi = require('shopify-api-node'); // https://github.com/microapps/Shopify-api-node
 const Debug = require('debug');                  // https://github.com/visionmedia/debug
-const async = require('async');
+const pTimes = require('p-times');
 
 const utilities = require('./utilities.js');
 
 var api = {
-  debug: Debug('shopify-server:api')
+  debug: new Debug('shopify-server:api')
 };
 
 
@@ -276,23 +276,15 @@ api.koa = (opts, app) => {
       api.debug("count", count);
       api.debug("pages", pages);
 
-      // TODO remove deps to async module by make this more promise like?
-      // use https://github.com/sindresorhus/p-times instead?
-      async.times(pages, (n, next) => {
+      return pTimes(pages, (n) => {
         n += 1;
         api.debug("page", n);
-        shopify.product.list({limit: productsPerPage, page: n})
-        .then(products => {
-          next(null, products);
-        })
-        .catch(next);
-      }, (error, productsOfProducts) => {
-        if(error) {
-          return ctx.throw(500, error);
-        }
-        var products = shopifyServer.utilities.flattenArrayOfArray(productsOfProducts);
-        ctx.jsonp = products;
+        return shopify.product.list({limit: productsPerPage, page: n})
       });
+    })
+    .then((productsOfProducts) => {
+      var products = utilities.flattenArrayOfArray(productsOfProducts);
+      ctx.jsonp = products;
     })
     .catch((error) => {
       ctx.throw(500, error);
