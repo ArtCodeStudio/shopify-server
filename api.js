@@ -274,6 +274,10 @@ api.koa = (opts, app) => {
     opts.appName = 'shopify-app';
   }
 
+  if(opts.shopifyConfig === null || typeof(opts.shopifyConfig) !== 'object') {
+    throw new Error('shopify config object is required');
+  }
+
   if(typeof(opts.baseUrl) !== 'string') {
     opts.baseUrl = `/api/${opts.appName}/:shopName`;
   }
@@ -309,15 +313,6 @@ api.koa = (opts, app) => {
     }
 
     return next();
-  });
-
-  /**
-   * REST API to get all available api definitions
-   */
-  var url = `${opts.baseUrl}/definitions`;
-  api.debug(`init route: ${url}`);
-  router.get(url, (ctx) => {
-    ctx.body = api.definitions;
   });
 
   /**
@@ -409,7 +404,10 @@ api.koa = (opts, app) => {
   var url = `${opts.baseUrl}/definitions`;
   api.debug(`init route: ${url}`);
   router.get(url, (ctx) => {
-    ctx.body = api.definitions;
+    ctx.body = {
+      api: api.definitions,
+      scopes: opts.shopifyConfig.scopes,
+    }
   });
 
   /**

@@ -3,7 +3,7 @@
 'use strict';
 
 const ShopifyToken = require('shopify-token');  // https://github.com/lpinca/shopify-token
-const Debug = require('debug');  // https://github.com/visionmedia/debug
+const Debug = require('debug');                 // https://github.com/visionmedia/debug
 
 const utilities = require('./utilities.js');
 
@@ -135,7 +135,7 @@ auth.koa = (opts, app) => {
   if(opts.shopifyConfig === null || typeof(opts.shopifyConfig) !== 'object') {
     throw new Error('shopify config object is required');
   }
-  
+
   if(opts.firebaseWebAppConfig === null || typeof(opts.firebaseWebAppConfig) !== 'object') {
     throw new Error('firebase config object for web apps is required, see https://firebase.google.com/docs/web/setup');
   }
@@ -154,124 +154,124 @@ auth.koa = (opts, app) => {
   app.use(function(ctx, next){
     auth.debug(ctx.path);
     return next();
-  })
+  });
 
   /**
   * The router can use regex in path
   * @see https://github.com/pillarjs/path-to-regexp
   */
   router
+  /**
+   * Redirects the User to the Shopify authentication consent screen. Also the 'state' session is set for later state verification.
+   */
+  .get(`${opts.baseUrl}/:shopName/redirect`, (ctx) => {
+
+    const appName = opts.appName;
+    const shopName = ctx.params.shopName;
+    var session = ctx[opts.contextStorageKey];
+
+    if(!session[appName]) {
+      session[appName] = {};
+    }
+
+    if(!session[appName][shopName]) {
+      session[appName][shopName] = {};
+    }
+
     /**
-     * Redirects the User to the Shopify authentication consent screen. Also the 'state' session is set for later state verification.
+     * Generate a random nonce.
      */
-    .get(`${opts.baseUrl}/:shopName/redirect`, (ctx) => {
-
-      const appName = opts.appName;
-      const shopName = ctx.params.shopName;
-      var session = ctx[opts.contextStorageKey];
-
-      if(!session[appName]) {
-        session[appName] = {};
-      }
-
-      if(!session[appName][shopName]) {
-        session[appName][shopName] = {};
-      }
-
-      /**
-       * Generate a random nonce.
-       */
-      const nonce = shopifyToken.generateNonce();
-
-      /**
-      * Generate the authorization URL. For the sake of simplicity the shop name
-      * is fixed here but it can, of course, be passed along with the request and
-      * be different for each request.
-      */
-      const uri = shopifyToken.generateAuthUrl(shopName, opts.shopifyConfig.scopes, nonce);
-
-      /**
-       * Save the nonce in the session to verify it later.
-       */
-      session[appName][shopName].state = nonce;
-      ctx.redirect(uri);
-
-    })
-    /**
-     * Exchanges a given Shopify auth code passed in the 'code' URL query parameter for a Firebase auth token.
-     * The request also needs to specify a 'state' query parameter which will be checked against the 'state' cookie to avoid
-     * Session Fixation attacks.
-     * This is meant to be used by Web Clients.
-    */
-    .get(`${opts.baseUrl}/callback`, async (ctx, next) => {
-      const state = ctx.query.state;
-      const appName = opts.appName;
-      const shopName = utilities.getShopName(ctx.query.shop);
-      var session = ctx[opts.contextStorageKey];
-
-      if(!session[appName]) {
-        session[appName] = {};
-      }
-
-      if(!session[appName][shopName]) {
-        session[appName][shopName] = {};
-      }
-
-      // Validate the state.
-      if (ctx.query.state !== session[appName][shopName].state) {
-        ctx.throw(400, 'Security checks failed (state)');
-      }
-
-      // Validare the hmac.
-      if (!shopifyToken.verifyHmac(ctx.query)) {
-        ctx.throw(400, 'Security checks failed (hmac)');
-      }
-
-      /**
-      * Exchange the authorization code for a permanent access token.
-      */
-      await shopifyToken.getAccessToken(ctx.query.shop, ctx.query.code)
-      .then((shopifyAccessToken) => {
-        auth.debug('Resive Token:', shopifyAccessToken);
-        session[appName][shopName].shopifyToken = shopifyAccessToken;
-        return auth.createFirebaseCustomAuth(opts.firebaseApp, appName, ctx.query.shop); //, (err, firebaseAuth) => {
-      })
-      .then((customToken) => {
-        session[appName][shopName].firebaseToken = customToken;
-        session[appName][shopName].firebaseUid = auth.getFirebaseUID(ctx.query.shop);
-        session[appName][shopName].state = undefined;
-
-        // Serve an HTML page that signs the user in and updates the user profile.
-        const template = auth.signInFirebaseTemplate(ctx.query.shop, appName, session[appName][shopName].shopifyToken, opts.shopifyConfig.apiKey, session[appName][shopName].firebaseToken, opts.firebaseWebAppConfig.projectId, opts.firebaseWebAppConfig.apiKey);
-        ctx.body = template;
-      })
-      .catch((err) => {
-        ctx.throw(500, err); // err.stack
-      });
-
-    })
+    const nonce = shopifyToken.generateNonce();
 
     /**
-    * Get token
-    * TODO Is this safe through sessions?
+    * Generate the authorization URL. For the sake of simplicity the shop name
+    * is fixed here but it can, of course, be passed along with the request and
+    * be different for each request.
     */
-    .get(`${opts.baseUrl}/:shopName/token`, (ctx) => {
-      const appName = opts.appName;
-      const shopName = ctx.params.shopName;
-      var session = ctx[opts.contextStorageKey];
+    const uri = shopifyToken.generateAuthUrl(shopName, opts.shopifyConfig.scopes, nonce);
 
-      if( session[appName] && session[appName][shopName] && session[appName][shopName].firebaseToken ) {
-        ctx.jsonp = {
-          firebaseToken: session[appName][shopName].firebaseToken,
-        }
-      } else {
-        ctx.throw(404, 'Not Found');
-      }
+    /**
+     * Save the nonce in the session to verify it later.
+     */
+    session[appName][shopName].state = nonce;
+    ctx.redirect(uri);
 
+  })
+  /**
+   * Exchanges a given Shopify auth code passed in the 'code' URL query parameter for a Firebase auth token.
+   * The request also needs to specify a 'state' query parameter which will be checked against the 'state' cookie to avoid
+   * Session Fixation attacks.
+   * This is meant to be used by Web Clients.
+  */
+  .get(`${opts.baseUrl}/callback`, async (ctx, next) => {
+    const state = ctx.query.state;
+    const appName = opts.appName;
+    const shopName = utilities.getShopName(ctx.query.shop);
+    var session = ctx[opts.contextStorageKey];
+
+    if(!session[appName]) {
+      session[appName] = {};
+    }
+
+    if(!session[appName][shopName]) {
+      session[appName][shopName] = {};
+    }
+
+    // Validate the state.
+    if (ctx.query.state !== session[appName][shopName].state) {
+      ctx.throw(400, 'Security checks failed (state)');
+    }
+
+    // Validare the hmac.
+    if (!shopifyToken.verifyHmac(ctx.query)) {
+      ctx.throw(400, 'Security checks failed (hmac)');
+    }
+
+    /**
+    * Exchange the authorization code for a permanent access token.
+    */
+    await shopifyToken.getAccessToken(ctx.query.shop, ctx.query.code)
+    .then((shopifyAccessToken) => {
+      auth.debug('Resive Token:', shopifyAccessToken);
+      session[appName][shopName].shopifyToken = shopifyAccessToken;
+      return auth.createFirebaseCustomAuth(opts.firebaseApp, appName, ctx.query.shop); //, (err, firebaseAuth) => {
     })
-    ;
+    .then((customToken) => {
+      session[appName][shopName].firebaseToken = customToken;
+      session[appName][shopName].firebaseUid = auth.getFirebaseUID(ctx.query.shop);
+      session[appName][shopName].state = undefined;
 
-    return router.routes();
+      // Serve an HTML page that signs the user in and updates the user profile.
+      const template = auth.signInFirebaseTemplate(ctx.query.shop, appName, session[appName][shopName].shopifyToken, opts.shopifyConfig.apiKey, session[appName][shopName].firebaseToken, opts.firebaseWebAppConfig.projectId, opts.firebaseWebAppConfig.apiKey);
+      ctx.body = template;
+    })
+    .catch((err) => {
+      ctx.throw(500, err); // err.stack
+    });
+
+  })
+
+  /**
+  * Get token
+  * TODO Is this safe through sessions?
+  */
+  .get(`${opts.baseUrl}/:shopName/token`, (ctx) => {
+    const appName = opts.appName;
+    const shopName = ctx.params.shopName;
+    var session = ctx[opts.contextStorageKey];
+
+    if( session[appName] && session[appName][shopName] && session[appName][shopName].firebaseToken ) {
+      ctx.jsonp = {
+        firebaseToken: session[appName][shopName].firebaseToken,
+      }
+    } else {
+      ctx.throw(404, 'Not Found');
+    }
+
+  })
+  ;
+
+  return router.routes();
 }
 
 module.exports = auth;
