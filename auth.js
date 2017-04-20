@@ -1,10 +1,14 @@
+/*jslint es6 */
+
+'use strict';
+
 const ShopifyToken = require('shopify-token');  // https://github.com/lpinca/shopify-token
 const Debug = require('debug');  // https://github.com/visionmedia/debug
 
 const utilities = require('./utilities.js');
 
 var auth = {
-  debug: Debug('shopify-server:auth')
+  debug: new Debug('shopify-server:auth')
 };
 
 /**

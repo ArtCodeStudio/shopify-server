@@ -1,4 +1,6 @@
-'use strict'
+/*jslint es6 */
+
+'use strict';
 
 const ShopifyApi = require('shopify-api-node');   // https://github.com/microapps/Shopify-api-node
 const Debug = require('debug');                   // https://github.com/visionmedia/debug
@@ -241,8 +243,6 @@ api.getShopifyToken = (firebaseApp, firebaseIdToken) => {
     res.status(500).send(error.message);
   });
 }
-
-
 
 /**
  * 

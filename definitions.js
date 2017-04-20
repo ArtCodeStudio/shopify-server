@@ -1,4 +1,8 @@
+/*jslint es6 */
+
 module.exports = (opts) => {
+
+  'use strict';
 
   if(typeof(opts.appName) !== 'string') {
     opts.appName = 'shopify-app';
