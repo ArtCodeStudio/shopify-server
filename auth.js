@@ -58,7 +58,7 @@ auth.createFirebaseCustomAuth = (firebaseApp, appName, shop, cb) => {
  */
 auth.signInFirebaseTemplate = (shop, appName, shopifyAccessToken, shopifyApiKey, firebaseToken, firebaseProjectId, firebaseApiKey) => {
   return `
-    <script src="https://www.gstatic.com/firebasejs/3.7.5/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.8.0/firebase.js"></script>
     <script>
       /*
        * Promise Polyfill for older browsers
