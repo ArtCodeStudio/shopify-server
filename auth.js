@@ -20,9 +20,7 @@ auth.init = (shopifyConfig) => {
   return new ShopifyToken(shopifyConfig);
 }
 
-auth.getFirebaseUID = (shop) => {
-  return `shopify:${shop.replace(/\./g, '-')}`; // replace . (dot) with - (minus) because: Paths must be non-empty strings and can't contain ".", "#", "$", "[", or "]"
-}
+
 
 /**
  * Creates a Firebase custom auth token for the given Shopify user ID.
@@ -31,7 +29,7 @@ auth.getFirebaseUID = (shop) => {
  */
 auth.createFirebaseCustomAuth = (firebaseApp, appName, shop, cb) => {
   // The UID we'll assign to the user.
-  var uid = auth.getFirebaseUID(shop);
+  var uid = utilities.getFirebaseUID(shop);
 
   // Create the custom token.
   if(!cb) {
@@ -238,7 +236,7 @@ auth.koa = (opts, app) => {
     })
     .then((customToken) => {
       session[appName][shopName].firebaseToken = customToken;
-      session[appName][shopName].firebaseUid = auth.getFirebaseUID(ctx.query.shop);
+      session[appName][shopName].firebaseUid = utilities.getFirebaseUID(ctx.query.shop);
       session[appName][shopName].state = undefined;
 
       // Serve an HTML page that signs the user in and updates the user profile.

@@ -15,9 +15,11 @@
 const utilities = require('./utilities.js');
 const auth = require('./auth.js');
 const api = require('./api.js');
+const admin = require('./admin.js');
 
 module.exports = {
   utilities: utilities,
   auth: auth,
   api: api,
+  admin: admin,
 }

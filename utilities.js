@@ -3,7 +3,7 @@ const Debug = require('debug')  // https://github.com/visionmedia/debug
 const util = require('util');
 
 var utilities = {
-  debug: Debug('shopify-server:utilities')
+  debug: new Debug('shopify-server:utilities')
 };
 
 utilities.extend = util._extend;
@@ -43,6 +43,27 @@ utilities.getShopName = (shop) => {
 
 utilities.getShopifyAppUrl = (shop, apiKey) => {
   return 'https://'+shop+'/admin/apps/'+apiKey
+}
+
+/**
+ * Generates a uid string for firebase from the shop url
+ * @see utilities.getShopByFirebaseUID
+ */
+utilities.getFirebaseUID = (shop) => {
+  return `shopify:${shop.replace(/\./g, '-')}`; // replace . (dot) with - (minus) because: Paths must be non-empty strings and can't contain ".", "#", "$", "[", or "]"
+}
+
+/**
+ * Split the shop url from the firebase uid string
+ * @see utilities.getFirebaseUID
+ */
+utilities.getShopByFirebaseUID = (uid) => {
+  const shop = uid.replace('shopify:', '').replace('-myshopify-com', '.myshopify.com');
+  const shopName = utilities.getShopName(shop);
+  return {
+    shop: shop, // domain
+    shopName: shopName // subdomain
+  }
 }
 
 /**
