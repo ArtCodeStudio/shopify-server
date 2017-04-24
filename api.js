@@ -92,11 +92,17 @@ api.product = {};
 /**
  * Custom Api implementation to get all products at once without pagination
  */
-api.product.getAll = (shopify) => {
+api.product.listAll = (shopify) => {
   const itemsPerPage = 250;
   return shopify.product.count()
   .then((count) => {
     var pages = Math.round(count / itemsPerPage);
+
+    // Are there any remaining items on the next page?
+    if(count % itemsPerPage > 0 ) {
+      pages++;
+    }
+
     if(pages <= 0) {
       pages = 1;
     }
@@ -129,6 +135,12 @@ api.customer.listAll = (shopify, metafields) => {
   return shopify.customer.count()
   .then((count) => {
     var pages = Math.round(count / itemsPerPage);
+
+    // Are there any remaining items on the next page?
+    if(count % itemsPerPage > 0 ) {
+      pages++;
+    }
+
     if(pages <= 0) {
       pages = 1;
     }
@@ -161,6 +173,12 @@ api.smartCollection.listAll = (shopify, metafields) => {
   return shopify.smartCollection.count()
   .then((count) => {
     var pages = Math.round(count / itemsPerPage);
+
+    // Are there any remaining items on the next page?
+    if(count % itemsPerPage > 0 ) {
+      pages++;
+    }
+
     if(pages <= 0) {
       pages = 1;
     }
@@ -193,6 +211,12 @@ api.customCollection.listAll = (shopify, metafields) => {
   return shopify.customCollection.count()
   .then((count) => {
     var pages = Math.round(count / itemsPerPage);
+
+    // Are there any remaining items on the next page?
+    if(count % itemsPerPage > 0 ) {
+      pages++;
+    }
+
     if(pages <= 0) {
       pages = 1;
     }
