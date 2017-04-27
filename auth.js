@@ -20,8 +20,6 @@ auth.init = (shopifyConfig) => {
   return new ShopifyToken(shopifyConfig);
 }
 
-
-
 /**
  * Creates a Firebase custom auth token for the given Shopify user ID.
  *
@@ -101,10 +99,7 @@ auth.signInFirebaseTemplate = (shop, appName, shopifyAccessToken, shopifyApiKey,
 
 /**
  * Koa middleware for shopify app authentification using oath2
- *
- *
- * For an example how you can write your own middleware for koa you can lool at koa-logger
- * @see https://github.com/koajs/logger
+ * @requires koa-router, koa-json, koa-safe-jsonp
  */
 auth.koa = (opts, app) => {
   const Router = require('koa-router'); // https://github.com/alexmingoia/koa-router/tree/master/
@@ -147,12 +142,6 @@ auth.koa = (opts, app) => {
   // init json and jsonp middleware / api
   app.use(json({ pretty: false, param: 'pretty' }));
   jsonp(app);
-
-  // logger
-  app.use(function(ctx, next){
-    auth.debug(ctx.path);
-    return next();
-  });
 
   /**
   * The router can use regex in path

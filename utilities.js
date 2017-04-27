@@ -2,11 +2,33 @@ const Firebase = require('firebase-admin');
 const Debug = require('debug')  // https://github.com/visionmedia/debug
 const util = require('util');
 
-var utilities = {
+let utilities = {
   debug: new Debug('shopify-server:utilities')
 };
 
 utilities.extend = util._extend;
+
+utilities.isObject = function(a) {
+  return (!!a) && (a.constructor === Object);
+};
+
+utilities.isArray = function(a) {
+  return (!!a) && (a.constructor === Array);
+};
+
+// see https://blog.raananweber.com/2015/12/01/writing-a-promise-delayer/
+utilities.delayPromise = (delay) => {
+  // return a function that accepts a single variable
+  return function(data) {
+    // this function returns a promise.
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        // a promise that is resolved after "delay" milliseconds with the data provided
+        resolve(data);
+      }, delay);
+    });
+  };
+};
 
 utilities.async = {};
 /**
@@ -14,10 +36,10 @@ utilities.async = {};
  * @see http://stackoverflow.com/a/7442013/1465919
  */
 utilities.async.forEach = (o, cb) => {
-  var counter = 0,
-  keys = Object.keys(o),
-  len = keys.length;
-  var next = () => {
+  let counter = 0;
+  let keys = Object.keys(o);
+  let len = keys.length;
+  let next = () => {
     if (counter < len)
     cb(keys[counter], o[keys[counter++]], next);
   };
@@ -25,25 +47,25 @@ utilities.async.forEach = (o, cb) => {
 };
 
 utilities.initFirebase = (appName, firebaseServiceAccount, firebaseDatabaseURL ) => {
-  var firebase = Firebase.initializeApp({
+  let firebase = Firebase.initializeApp({
     credential: Firebase.credential.cert(firebaseServiceAccount),
     databaseURL: firebaseDatabaseURL,
   }, appName);
 
   return firebase;
-}
+};
 
 /**
  * Get CURRENT_LOGGED_IN_SHOP from CURRENT_LOGGED_IN_SHOP.myshopify.com
  */
 utilities.getShopName = (shop) => {
-  return shop.substring(0, shop.indexOf("."));
+  return shop.substring(0, shop.indexOf('.'));
 };
 
 
 utilities.getShopifyAppUrl = (shop, apiKey) => {
-  return 'https://'+shop+'/admin/apps/'+apiKey
-}
+  return 'https://'+shop+'/admin/apps/'+apiKey;
+};
 
 /**
  * Generates a uid string for firebase from the shop url
@@ -51,7 +73,7 @@ utilities.getShopifyAppUrl = (shop, apiKey) => {
  */
 utilities.getFirebaseUID = (shop) => {
   return `shopify:${shop.replace(/\./g, '-')}`; // replace . (dot) with - (minus) because: Paths must be non-empty strings and can't contain ".", "#", "$", "[", or "]"
-}
+};
 
 /**
  * Split the shop url from the firebase uid string
@@ -62,16 +84,16 @@ utilities.getShopByFirebaseUID = (uid) => {
   const shopName = utilities.getShopName(shop);
   return {
     shop: shop, // domain
-    shopName: shopName // subdomain
-  }
-}
+    shopName: shopName, // subdomain
+  };
+};
 
 /**
  * Merge/flatten an array of arrays
  * @see http://stackoverflow.com/a/10865042/1465919
  */
-utilities.flattenArrayOfArray = function (arrays) {
+utilities.flattenArrayOfArray = (arrays) => {
   return [].concat.apply([], arrays);
-}
+};
 
 module.exports = utilities;
