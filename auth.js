@@ -104,8 +104,6 @@ auth.signInFirebaseTemplate = (shop, appName, shopifyAccessToken, shopifyApiKey,
 auth.koa = (opts, app) => {
   const Router = require('koa-router'); // https://github.com/alexmingoia/koa-router/tree/master/
   const router = new Router();
-  const json = require('koa-json');     // https://github.com/koajs/json
-  const jsonp = require('koa-safe-jsonp');
 
   auth.debug("init koa middleware", 'options', opts);;
 
@@ -138,10 +136,6 @@ auth.koa = (opts, app) => {
   }
 
   const shopifyToken = auth.init(opts.shopifyConfig);
-
-  // init json and jsonp middleware / api
-  app.use(json({ pretty: false, param: 'pretty' }));
-  jsonp(app);
 
   /**
   * The router can use regex in path
@@ -258,7 +252,7 @@ auth.koa = (opts, app) => {
   })
   ;
 
-  return router.routes();
+  return router;
 }
 
 module.exports = auth;

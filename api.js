@@ -279,13 +279,12 @@ api.init = (shopName, shopifyAccessToken) => {
 }
 
 /**
- * 
+ * Koa middleware for shopify rest api
+ * @requires koa-router, koa-json, koa-safe-jsonp
  */
 api.koa = (opts, app) => {
   const Router = require('koa-router'); // https://github.com/alexmingoia/koa-router/tree/master/
   const router = new Router();
-  const jsonp = require('koa-safe-jsonp');
-  const json = require('koa-json');     // https://github.com/koajs/json
 
   api.debug("init koa middleware", 'options', opts);
 
@@ -318,10 +317,6 @@ api.koa = (opts, app) => {
     appName: opts.appName,
     baseUrl: opts.baseUrl,
   });
-
-  // use json ans jsonp for repsonses
-  app.use(json({ pretty: false, param: 'pretty' }));
-  jsonp(app);
 
   // log requests
   app.use(function(ctx, next){
@@ -664,7 +659,7 @@ api.koa = (opts, app) => {
     next();
   });
 
-  return router.routes();
+  return router;
 
 }
 

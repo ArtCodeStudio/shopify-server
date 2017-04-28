@@ -105,8 +105,19 @@ webhook.subscripe = (opts, shops) => {
       'format': 'json',
     };
 
+    let needSalesChannelSDK = false;
+    if(topic === 'collection_listings/remove'
+    || topic === 'collection_listings/update'
+    || topic === 'collection_listings/add'
+    || topic === 'product_listings/add'
+    || topic === 'product_listings/update'
+    || topic === 'product_listings/remove') {
+      needSalesChannelSDK = true;
+    }
+
     createWebhooks.push({
       needUpdate: false,
+      needSalesChannelSDK: needSalesChannelSDK,
       params: params,
     });
   }
@@ -134,8 +145,12 @@ webhook.subscripe = (opts, shops) => {
       }).then((createWebhooks) => {
         webhook.debug(`createWebhooks`, createWebhooks);
         return utilities.async.pMap(createWebhooks, (createWebhook, index) => {
+          if(createWebhook.needSalesChannelSDK) {
+            webhook.debug(`ignore webhook because it needs the Sales Channel SDK: ${createWebhook.params.topic}`);
+            return Promise.resolve();
+          } 
           if(createWebhook.needUpdate) {
-             webhook.debug(`update webhook: ${createWebhook.params.topic}`);
+            webhook.debug(`update webhook: ${createWebhook.params.topic}`);
             return api.webhook.update(createWebhook.params.id, createWebhook.params)
             .catch((error) => {
               console.error(`error on update webhook ${createWebhook.params.topic} - ${error.hostname}`);
@@ -205,9 +220,9 @@ webhook.koa = (opts, app, shops, controller) => {
     /**
      * Route to recive the webhook
      */
-    router.all(routeURL, controller[ressource][action]);
+    router.post(routeURL, controller[ressource][action]);
   }
-  return router.routes();
+  return router;
 }
 
 module.exports = webhook;
