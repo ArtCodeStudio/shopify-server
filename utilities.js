@@ -1,9 +1,9 @@
 const Firebase = require('firebase-admin');
-const Debug = require('debug')  // https://github.com/visionmedia/debug
+const Debug = require('debug');
 const util = require('util');
 
 let utilities = {
-  debug: new Debug('shopify-server:utilities')
+  debug: new Debug('shopify-server:utilities'),
 };
 
 utilities.extend = util._extend;
@@ -31,6 +31,10 @@ utilities.delayPromise = (delay) => {
 };
 
 utilities.async = {};
+
+utilities.async.pTimes = require('p-times');                // https://github.com/sindresorhus/p-times
+utilities.async.pMap = require('p-map');                    // https://github.com/sindresorhus/p-map
+
 /**
  * Iterate over object keys
  * @see http://stackoverflow.com/a/7442013/1465919

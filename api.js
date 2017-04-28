@@ -4,8 +4,7 @@
 
 const ShopifyApi = require('shopify-api-node');   // https://github.com/microapps/Shopify-api-node
 const Debug = require('debug');                   // https://github.com/visionmedia/debug
-const pTimes = require('p-times');                // https://github.com/sindresorhus/p-times
-const pMap = require('p-map');                    // https://github.com/sindresorhus/p-map
+
 
 const utilities = require('./utilities.js');
 
@@ -63,7 +62,7 @@ api.metafield = {};
  * TODO TESTME: This function is not tested, just ported from https://git.mediamor.de/jumplink.eu/microservice-shopify/src/master/microservice-shopify.js#L134
  */
 api.metafield.deleteAll = (shopify, ids) => {
-  return pMap(ids, (id, index) => {
+  return utilities.async.pMap(ids, (id, index) => {
     return shopify.metafield.delete(id)
   });
 }
@@ -73,7 +72,7 @@ api.metafield.deleteAll = (shopify, ids) => {
  * TODO TESTME: This function is not tested, just ported from https://git.mediamor.de/jumplink.eu/microservice-shopify/src/master/microservice-shopify.js#L164
  */
 api.metafield.updateAll = (shopify, metafields) => {
-  return pMap(metafields, (metafield, index) => {
+  return utilities.async.pMap(metafields, (metafield, index) => {
     var metafield = {
       id: metafield.id,
       value: metafield.value,
@@ -110,7 +109,7 @@ api.product.listAll = (shopify) => {
     api.debug("count", count);
     api.debug("pages", pages);
 
-    return pTimes(pages, (n) => {
+    return utilities.async.pTimes(pages, (n) => {
       n += 1;
       api.debug("page", n);
       return shopify.product.list({limit: itemsPerPage, page: n})
@@ -148,7 +147,7 @@ api.customer.listAll = (shopify, metafields) => {
     api.debug("count", count);
     api.debug("pages", pages);
 
-    return pTimes(pages, (n) => {
+    return utilities.async.pTimes(pages, (n) => {
       n += 1;
       api.debug("page", n);
       return shopify.customer.list({limit: itemsPerPage, page: n})
@@ -186,7 +185,7 @@ api.smartCollection.listAll = (shopify, metafields) => {
     api.debug("count", count);
     api.debug("pages", pages);
 
-    return pTimes(pages, (n) => {
+    return utilities.async.pTimes(pages, (n) => {
       n += 1;
       api.debug("page", n);
       return shopify.smartCollection.list({limit: itemsPerPage, page: n})
@@ -224,7 +223,7 @@ api.customCollection.listAll = (shopify, metafields) => {
     api.debug("count", count);
     api.debug("pages", pages);
 
-    return pTimes(pages, (n) => {
+    return utilities.async.pTimes(pages, (n) => {
       n += 1;
       api.debug("page", n);
       return shopify.customCollection.list({limit: itemsPerPage, page: n})
