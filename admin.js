@@ -1,8 +1,8 @@
 'use strict';
 
-  /*!
-  * Module dependencies.
-  */
+/*!
+* Module dependencies.
+*/
 const Debug = require('debug');                 // https://github.com/visionmedia/debug
 const utilities = require('./utilities.js');
 
