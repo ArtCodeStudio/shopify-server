@@ -37,6 +37,8 @@ utilities.async.pMap = require('p-map');                    // https://github.co
 
 /**
  * Iterate over object keys
+ * @param {Object} o the Object you want to interate over
+ * @param {Function} cb callback
  * @see http://stackoverflow.com/a/7442013/1465919
  */
 utilities.async.forEach = (o, cb) => {
@@ -61,6 +63,8 @@ utilities.initFirebase = (appName, firebaseServiceAccount, firebaseDatabaseURL )
 
 /**
  * Get CURRENT_LOGGED_IN_SHOP from CURRENT_LOGGED_IN_SHOP.myshopify.com
+ * @param {String} shop the shop, e.g. CURRENT_LOGGED_IN_SHOP.myshopify.com
+ * @return {String} the shopname e.g. CURRENT_LOGGED_IN_SHOP
  */
 utilities.getShopName = (shop) => {
   return shop.substring(0, shop.indexOf('.'));
@@ -74,6 +78,8 @@ utilities.getShopifyAppUrl = (shop, apiKey) => {
 /**
  * Generates a uid string for firebase from the shop url
  * @see utilities.getShopByFirebaseUID
+ * @param {String} shop the shop, e.g. CURRENT_LOGGED_IN_SHOP.myshopify.com
+ * @return {String} the firebase user id e.g. shopify:CURRENT_LOGGED_IN_SHOP-myshopify-com
  */
 utilities.getFirebaseUID = (shop) => {
   return `shopify:${shop.replace(/\./g, '-')}`; // replace . (dot) with - (minus) because: Paths must be non-empty strings and can't contain ".", "#", "$", "[", or "]"
@@ -82,6 +88,8 @@ utilities.getFirebaseUID = (shop) => {
 /**
  * Split the shop url from the firebase uid string
  * @see utilities.getFirebaseUID
+ * @param {String} uid firebase user id
+ * @return {Object} shop and shopname
  */
 utilities.getShopByFirebaseUID = (uid) => {
   const shop = uid.replace('shopify:', '').replace('-myshopify-com', '.myshopify.com');
@@ -95,9 +103,12 @@ utilities.getShopByFirebaseUID = (uid) => {
 /**
  * Merge/flatten an array of arrays
  * @see http://stackoverflow.com/a/10865042/1465919
+ * @param {Array<Array>} arrays array of arrays
+ * @return {Array} flatten array
  */
 utilities.flattenArrayOfArray = (arrays) => {
-  return [].concat.apply([], arrays);
+  let tmp = [];
+  return tmp.concat.apply([], arrays);
 };
 
 module.exports = utilities;

@@ -1,5 +1,3 @@
-/*jslint es6 */
-
 'use strict';
 
 /**
@@ -24,4 +22,4 @@ module.exports = {
   api: api,
   admin: admin,
   webhook: webhook,
-}
+};
