@@ -148,31 +148,31 @@ class Webhook {
           for (let k = 0; k < existingWebhooks.length; k++) {
             let existingWebhook = existingWebhooks[k];
             this.debug(`compare webhooks: `, existingWebhook, createWebhook);
-            if(existingWebhook.topic === createthis.params.topic) {
-              createthis.needUpdate = true;
-              createthis.params.id = existingWebhook.id;
+            if(existingWebhook.topic === createWebhook.params.topic) {
+              createWebhook.needUpdate = true;
+              createWebhook.params.id = existingWebhook.id;
             }
           }
           return createWebhook;
         }).then((createWebhooks) => {
           this.debug(`createWebhooks`, createWebhooks);
           return utilities.pMap(createWebhooks, (createWebhook, index) => {
-            if(createthis.needSalesChannelSDK) {
-              this.debug(`ignore webhook because it needs the Sales Channel SDK: ${createthis.params.topic}`);
+            if(createWebhook.needSalesChannelSDK) {
+              this.debug(`ignore webhook because it needs the Sales Channel SDK: ${createWebhook.params.topic}`);
               return Promise.resolve();
             }
-            if(createthis.needUpdate) {
-              this.debug(`update webhook: ${createthis.params.topic}`);
-              return api.webhook.update(createthis.params.id, createthis.params)
+            if(createWebhook.needUpdate) {
+              this.debug(`update webhook: ${createWebhook.params.topic}`);
+              return api.webhook.update(createWebhook.params.id, createWebhook.params)
               .catch((error) => {
-                console.error(`error on update webhook ${createthis.params.topic} - ${error.hostname}`);
+                console.error(`error on update webhook ${createWebhook.params.topic} - ${error.hostname}`);
                 return error;
               });
             } else {
-              this.debug(`create webhook: ${createthis.params.topic}`);
-              return api.webhook.create(createthis.params)
+              this.debug(`create webhook: ${createWebhook.params.topic}`);
+              return api.webhook.create(createWebhook.params)
               .catch((error) => {
-                console.error(`error on create webhook ${createthis.params.topic} - ${error.hostname}`);
+                console.error(`error on create webhook ${createWebhook.params.topic} - ${error.hostname}`);
                 return error;
               });
             }
