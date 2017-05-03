@@ -2,6 +2,10 @@ const Firebase = require('firebase-admin');
 const Debug = require('debug');
 const util = require('util');
 
+/**
+ * Set of some helpful methods
+ * @mixin
+ */
 let utilities = {
   debug: new Debug('shopify-server:utilities'),
 };
