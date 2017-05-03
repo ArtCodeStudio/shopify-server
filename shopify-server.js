@@ -11,15 +11,15 @@
  */
 
 const utilities = require('./utilities.js');
-const auth = require('./auth.js');
-const api = require('./api.js');
-const admin = require('./admin.js');
-const webhook = require('./webhook.js');
+const Auth = require('./auth.js');
+const Api = require('./api.js');
+const Admin = require('./admin.js');
+const Webhook = require('./webhook.js');
 
 module.exports = {
   utilities: utilities,
-  auth: auth,
-  api: api,
-  admin: admin,
-  webhook: webhook,
+  Auth: Auth,
+  Api: Api,
+  Admin: Admin,
+  Webhook: Webhook,
 };
