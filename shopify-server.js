@@ -10,11 +10,11 @@
  * @see https://github.com/OptimalBits/redbird
  */
 
-const utilities = require('./utilities.js');
-const Auth = require('./auth.js');
-const Api = require('./api.js');
-const Admin = require('./admin.js');
-const Webhook = require('./webhook.js');
+const utilities = require(__dirname + '/utilities.js');
+const Auth = require(__dirname + '/auth.js');
+const Api = require(__dirname + '/api.js');
+const Admin = require(__dirname + '/admin.js');
+const Webhook = require(__dirname + '/webhook.js');
 
 module.exports = {
   utilities: utilities,

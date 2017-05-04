@@ -219,6 +219,10 @@ class Webhook {
       opts.baseUrl = `/webhook/${opts.appName}`;
     }
 
+    if(typeof(opts.controllerMethodsInCamelCase) !== 'boolean') {
+      opts.controllerMethodsInCamelCase = false;
+    }
+
     if(!utilities.isArray(opts.topics)) {
       opts.topics = this.topics;
     }
@@ -233,7 +237,16 @@ class Webhook {
       /*
        * Route to recive the webhook
        */
-      router.post(routeURL, controller[ressource][action]);
+      let controllerMethod = null;
+      if(opts.controllerMethodsInCamelCase) {
+        let methodName = utilities.ressourceActionToCamelCase(ressource, action);
+        this.debug('methodName', methodName);
+        controllerMethod = controller[utilities.ressourceActionToCamelCase(ressource, action)];
+      } else {
+        controllerMethod = controller[ressource][action];
+      }
+
+      router.post(routeURL, controllerMethod);
     }
     return router;
   };
