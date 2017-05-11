@@ -73,7 +73,35 @@ class Webhook {
   };
 
   /**
-   * Subscripe all webhooks defined in opts.topics, if opts.topics is not defined, all webhooks will be subscriped
+   * Subscripe all webhooks defined in opts.topics, if opts.topics is not defined, all webhooks will be subscriped.
+   * 
+  * ## Subscribe / Receive Webhooks
+  *
+  * To **subscribe** webhooks on your local system are a special case,
+  * webhooks need your public ip address and you need to make this app public available in the internet.
+  *
+  * To make this app public you need to foreward the ssl port 443 on your router to your local device like this:
+  *
+  * * protocol: tcp
+  * * port: 443
+  * * device / ip: device name or local ip of your device
+  * * to port: 443
+  *
+  * To let this app know what your public ip is, it is detected with [environmentService.getAddress()](services/environment.js)
+  * and used for the webhook subscription automatically.
+  *
+  * ## Multiple app insteance
+  *
+  * Another problematic thing is, that just one insteance of this app can *receive* a webhook of a specific topic and shopify shop,
+  * so if *more than one* are working on this app locally it could happen that the webhook subscriptions overwrite each other.
+  *
+  * ## Create / Update Webhooks
+  *
+  * If you create a webhook, the webhook is saved until you delete them, even if you restart this app.
+  * Webhooks are only deleted automatically if this "app has been offline for more than 48 hours".
+  * So if your public ip changes, you need to update all webhooks
+  * and if you restart this app you need to check which webhooks already exist befor you try to create them.
+   * 
    * @param {Object} opts Options
    * @param {Array} shops
    * @return {Promise}
