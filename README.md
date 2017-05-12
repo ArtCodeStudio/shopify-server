@@ -16,7 +16,7 @@ npm run doc
 Pulish the documentation with
 
 ```bash
-npm run publush-doc
+npm run publish-doc
 ```
 
 ## Environment
