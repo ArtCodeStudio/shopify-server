@@ -102,6 +102,38 @@ class Auth {
 
   /**
    * Koa middleware for shopify app authentification using oath2
+   * 
+   * You can provide a Shopify authentication riutes with the auth middleware:
+   *
+   * ## Routes
+   *
+   * ### `/auth/:appName/:shopName/redirect`
+   *
+   * ### `/auth/:appName/callback`
+   *
+   * ### `/auth/:appName/:shopName/token`
+   * 
+   * @example
+   * const Koa = require('koa');
+   * const session = require('koa-session');
+   * const shopifyServer = require('shopify-server');
+   * const app = new Koa();
+   * const config = require('./config.json');
+   *
+   * const firebaseApp = shopifyServer.utilities.initFirebase(config.app.handle, config.firebase['service-account'], config.firebase.databaseURL);
+   * app.keys = config.app.secrets;
+   * app.use(session(app))
+   *
+   * app.use(shopifyServer.auth.koa({
+   *   contextStorageKey: 'session',
+   *   appName: config.app.handle,
+   *   shopifyConfig: config.shopify,
+   *   firebaseWebAppConfig: config.firebase,
+   *   firebaseApp: firebaseApp,
+   * }, app));
+   *
+   * app.listen(process.env.PORT || 8080);
+   * 
    * @requires koa-router, koa-json, koa-safe-jsonp
    */
   koa(opts, app) {

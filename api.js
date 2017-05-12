@@ -7,6 +7,10 @@ const ShopifyApi = require('shopify-api-node');   // https://github.com/microapp
 const Debug = require('debug');                   // https://github.com/visionmedia/debug
 const utilities = require(__dirname + '/utilities.js');
 
+/**
+ * 
+ * @class Api
+ */
 class Api {
 
   /**
@@ -281,9 +285,48 @@ class Api {
     });
   }
 
-
   /**
    * Koa middleware for shopify rest api
+   * You can provide a full Shopify REST API with the api middleware:
+   * 
+   * ## Routes
+   *
+   * ### `/api/:appName/:shopName/init/:firebaseIdToken`
+   * REST API to get Shopify Token from firebase, init the shopify api and set the token to session
+   *
+   * ### `/api/:appName/:shopName/init/shopifytoken/:shopifyToken`
+   * REST API to init Shopify by passing the shopify token as url param and set the token to session
+   *
+   * ### `/api/:appName/:shopName/test`
+   * REST API to test if the Shopify api is working
+   *
+   * ### `/api/:appName/:shopName/definitions`
+   * REST API to get all available api definitions
+   *
+   * ### `/api/:appName/:shopName/:resource/:method`
+   * REST API for all supported api requests from [shopify-api-node](https://github.com/microapps/Shopify-api-node).  
+   * Exmaple: `/api/my-app-name/my-shop-subdomain/shop/get?callback=?&json='{"params":{"fields":"name"}}'`
+   * 
+   * @example
+   * const Koa = require('koa');
+   * const session = require('koa-session');
+   * const shopifyServer = require('shopify-server');
+   * const app = new Koa();
+   * const config = require('./config.json');
+   * 
+   * const firebaseApp = shopifyServer.utilities.initFirebase(config.app.handle, config.firebase['service-account'], config.firebase.databaseURL);
+   * app.keys = config.app.secrets;
+   * app.use(session(app))
+   * 
+   * app.use(shopifyServer.api.koa({
+   *   contextStorageKey: 'session',
+   *   appName: config.app.handle,
+   *   shopifyConfig: config.shopify,
+   *   firebaseApp: firebaseApp,
+   * }, app));
+   * 
+   * app.listen(process.env.PORT || 8080);
+   * ```
    * @requires koa-router, koa-json, koa-safe-jsonp
    */
   koa(opts, app) {
