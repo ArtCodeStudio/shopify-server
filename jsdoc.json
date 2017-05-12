@@ -19,7 +19,8 @@
         "recurse": true,
         "verbose": true,
         "debug": true,
-        "pedantic": false
+        "pedantic": false,
+        "readme": "README.md"
     },
     "templates": {
         "cleverLinks": true,
