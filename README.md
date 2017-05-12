@@ -5,7 +5,7 @@ shopify-server provides middlewares for authentication using [shopify-token](htt
 
 ## Documentation
 
-You found the documentation on [https://docs.jumplink.eu/shopify-server/](docs.jumplink.eu/shopify-server/).
+You found the documentation on [docs.jumplink.eu/shopify-server/](https://docs.jumplink.eu/shopify-server/).
 
 build the documentation with:
 
