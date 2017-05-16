@@ -9,6 +9,7 @@ const utilities = require('./utilities.js');
 
 /**
  * Shopify authentication helpers
+ * @alias shopify-server/Auth
  *
  * @see https://firebase.googleblog.com/2016/10/authenticate-your-firebase-users-with.html
  * @see https://github.com/firebase/custom-auth-samples

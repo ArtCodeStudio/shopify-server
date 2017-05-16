@@ -6,8 +6,10 @@
 const Debug = require('debug');                 // https://github.com/visionmedia/debug
 const utilities = require(__dirname + '/utilities.js');
 
+
 /**
  * Class for webhook stuff, e.g subscribe all webhooks
+ * @alias shopify-server/Webhook
  */
 class Webhook {
 

@@ -9,6 +9,7 @@ const utilities = require('./utilities.js');
 /**
  * Class for admin stuff, e.g list all shops where the app is installed,
  * so this should not be accessable by single app users, just for admins
+ * @alias shopify-server/Admin
  */
 class Admin {
 

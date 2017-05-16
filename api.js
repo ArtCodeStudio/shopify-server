@@ -9,7 +9,7 @@ const utilities = require(__dirname + '/utilities.js');
 
 /**
  * Shopify api helpers like a koa middleware for a shopify rest api or custom api methods 
- * @class Api
+ * @alias shopify-server/Api
  */
 class Api {
 
