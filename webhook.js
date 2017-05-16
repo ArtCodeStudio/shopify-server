@@ -7,7 +7,7 @@ const Debug = require('debug');                 // https://github.com/visionmedi
 const utilities = require(__dirname + '/utilities.js');
 
 /**
- * Class for webhook stuff, e.g subscripe all webhooks
+ * Class for webhook stuff, e.g subscribe all webhooks
  */
 class Webhook {
 
@@ -73,7 +73,7 @@ class Webhook {
   };
 
   /**
-   * Subscripe all webhooks defined in opts.topics, if opts.topics is not defined, all webhooks will be subscriped.
+   * subscribe all webhooks defined in opts.topics, if opts.topics is not defined, all webhooks will be subscribed.
    *
    * ## Subscribe / Receive Webhooks
    *
@@ -106,8 +106,8 @@ class Webhook {
    * @param {Array} shops
    * @return {Promise}
    */
-  subscripe(opts, shops) {
-    this.debug('subscripe webhooks', 'options', opts);
+  subscribe(opts, shops) {
+    this.debug('subscribe webhooks', 'options', opts);
 
     if(opts === null || typeof(opts) !== 'object') {
       opts = {};

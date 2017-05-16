@@ -24,7 +24,7 @@ class Admin {
      * @param {Object} firebaseApp
      * @return {Promise<Array>} - A promise to an array of shop datas object
      */
-    list(firebaseApp) {
+    shopsList(firebaseApp) {
         return new Promise((fulfill, reject) => {
             let db = firebaseApp.database();
             let ref = db.ref('/shopifyAccessToken');
