@@ -104,11 +104,20 @@ class Webhook {
    * So if your public ip changes, you need to update all webhooks
    * and if you restart this app you need to check which webhooks already exist befor you try to create them.
    *
+   * ## Disable Subscrition
+   * You can disable the subscriotion by setting he Enviroment Variable `DISABLE_WEBHOOKS_SUBSCRIPTION=all`
+   *
    * @param {Object} opts Options
    * @param {Array} shops
    * @return {Promise}
    */
   subscribe(opts, shops) {
+    if(process.env.DISABLE_WEBHOOKS_SUBSCRIPTION === 'all') {
+      const message = 'webhook subscription disabled';
+      this.debug(message);
+      return Promise.resolve(message);
+    }
+
     this.debug('subscribe webhooks', 'options', opts);
 
     if(opts === null || typeof(opts) !== 'object') {
@@ -134,7 +143,7 @@ class Webhook {
     let createWebhooks = [];
 
     /*
-     * Prepair webhooks fpr create / update
+     * Prepair webhooks for create / update
      */
     for (let g = 0; g < opts.topics.length; g++) {
       const topic = opts.topics[g];
