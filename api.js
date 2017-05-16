@@ -8,205 +8,207 @@ const Debug = require('debug');                   // https://github.com/visionme
 const utilities = require(__dirname + '/utilities.js');
 
 /**
- * 
+ * Shopify api helpers like a koa middleware for a shopify rest api or custom api methods 
  * @class Api
  */
 class Api {
 
   /**
-   * Create a new api object
+   * Creates an instance of Api
    */
   constructor() {
     this.debug = new Debug('shopify-server:admin');
+  }
 
-    /**
-     * Custom Api implementations for metafields 
-     */
-    this.metafield = {};
+  /**
+   * Delete multiple metafields at once
+   * @todo This function is not tested, just ported from https://git.mediamor.de/jumplink.eu/microservice-shopify/src/master/microservice-shopify.js#L134
+   * 
+   * @param {object} shopify shopify api instance
+   * @param {number[]} ids 
+   * @returns {Promise} Each api method returns a Promise that resolves with the result
+   */
+  metafieldDeleteAll(shopify, ids) {
+    return utilities.pMap(ids, (id, index) => {
+      return shopify.metafield.delete(id)
+    });
+  }
 
-    /**
-     * Delete multiple metafields at once
-     * @todo This function is not tested, just ported from https://git.mediamor.de/jumplink.eu/microservice-shopify/src/master/microservice-shopify.js#L134
-     */
-    this.metafield.deleteAll = (shopify, ids) => {
-      return utilities.pMap(ids, (id, index) => {
-        return shopify.metafield.delete(id)
+  /**
+   * Update multiple metafields at once
+   * @todo This function is not tested, just ported from https://git.mediamor.de/jumplink.eu/microservice-shopify/src/master/microservice-shopify.js#L164
+   * 
+   * @param {object} shopify shopify api instance 
+   * @param {object[]} metafields 
+   * @returns {Promise} Each api method returns a Promise that resolves with the result
+   */
+  metafieldUpdateAll (shopify, metafields) {
+    return utilities.pMap(metafields, (metafield, index) => {
+      var metafield = {
+        id: metafield.id,
+        value: metafield.value,
+        value_type: metafield.value_type,
+      }
+      // console.log(metafield.id, metafield);
+      return shopify.metafield.update(metafield.id, metafield)
+    });
+  }
+
+  /**
+   * Custom Api implementation to get all products at once without pagination
+   * 
+   * @param {object} shopify shopify api instance 
+   * @returns {Promise} Each api method returns a Promise that resolves with the result
+   */
+  productListAll(shopify) {
+    const itemsPerPage = 250;
+    return shopify.product.count()
+    .then((count) => {
+      var pages = Math.round(count / itemsPerPage);
+
+      // Are there any remaining items on the next page?
+      if(count % itemsPerPage > 0 ) {
+        pages++;
+      }
+
+      if(pages <= 0) {
+        pages = 1;
+      }
+
+      this.debug("count", count);
+      this.debug("pages", pages);
+
+      return utilities.pTimes(pages, (n) => {
+        n += 1;
+        this.debug("page", n);
+        return shopify.product.list({limit: itemsPerPage, page: n})
       });
-    }
+    })
+    .then((itemsOfItems) => {
+      var items = utilities.flattenArrayOfArray(itemsOfItems);
+      return items;
+    });
+  }
 
-    /**
-     * Update multiple metafields at once
-     * @todo This function is not tested, just ported from https://git.mediamor.de/jumplink.eu/microservice-shopify/src/master/microservice-shopify.js#L164
-     */
-    this.metafield.updateAll = (shopify, metafields) => {
-      return utilities.pMap(metafields, (metafield, index) => {
-        var metafield = {
-          id: metafield.id,
-          value: metafield.value,
-          value_type: metafield.value_type,
-        }
-        // console.log(metafield.id, metafield);
-        return shopify.metafield.update(metafield.id, metafield)
+  /**
+   * Custom Api implementation to get all customers at once without pagination
+   * 
+   * @param {object} shopify shopify api instance 
+   * @param {object[]} metafields 
+   * @returns {Promise} Each api method returns a Promise that resolves with the result
+   */
+  customerListAll(shopify, metafields) {
+    const itemsPerPage = 250;
+    return shopify.customer.count()
+    .then((count) => {
+      var pages = Math.round(count / itemsPerPage);
+
+      // Are there any remaining items on the next page?
+      if(count % itemsPerPage > 0 ) {
+        pages++;
+      }
+
+      if(pages <= 0) {
+        pages = 1;
+      }
+
+      this.debug('count', count);
+      this.debug('pages', pages);
+
+      return utilities.pTimes(pages, (n) => {
+        n += 1;
+        this.debug("page", n);
+        return shopify.customer.list({limit: itemsPerPage, page: n})
       });
-    }
+    })
+    .then((itemsOfItems) => {
+      var items = utilities.flattenArrayOfArray(itemsOfItems);
+      return items;
+    });
+  }
 
-    /**
-     * Custom Api implementations for products 
-     */
-    this.product = {};
+  /**
+   * Custom Api implementation to get all smartCollection at once without pagination
+   * 
+   * @param {object} shopify shopify api instance 
+   * @param {object[]} metafields 
+   * @returns {Promise} Each api method returns a Promise that resolves with the result
+   */
+  smartCollectionListAll(shopify, metafields) {
+    const itemsPerPage = 250;
+    return shopify.smartCollection.count()
+    .then((count) => {
+      var pages = Math.round(count / itemsPerPage);
 
-    /**
-     * Custom Api implementation to get all products at once without pagination
-     */
-    this.product.listAll = (shopify) => {
-      const itemsPerPage = 250;
-      return shopify.product.count()
-      .then((count) => {
-        var pages = Math.round(count / itemsPerPage);
+      // Are there any remaining items on the next page?
+      if(count % itemsPerPage > 0 ) {
+        pages++;
+      }
 
-        // Are there any remaining items on the next page?
-        if(count % itemsPerPage > 0 ) {
-          pages++;
-        }
+      if(pages <= 0) {
+        pages = 1;
+      }
 
-        if(pages <= 0) {
-          pages = 1;
-        }
+      this.debug("count", count);
+      this.debug("pages", pages);
 
-        this.debug("count", count);
-        this.debug("pages", pages);
-
-        return utilities.pTimes(pages, (n) => {
-          n += 1;
-          this.debug("page", n);
-          return shopify.product.list({limit: itemsPerPage, page: n})
-        });
-      })
-      .then((itemsOfItems) => {
-        var items = utilities.flattenArrayOfArray(itemsOfItems);
-        return items;
+      return utilities.pTimes(pages, (n) => {
+        n += 1;
+        this.debug("page", n);
+        return shopify.smartCollection.list({limit: itemsPerPage, page: n})
       });
-    }
+    })
+    .then((itemsOfItems) => {
+      var items = utilities.flattenArrayOfArray(itemsOfItems);
+      return items;
+    });
+  }
 
-    /**
-     * Custom Api implementations for customers 
-     */
-    this.customer = {};
+  /**
+   * Custom Api implementation to get all customCollection at once without pagination
+   * 
+   * @param {object} shopify shopify api instance 
+   * @param {object[]} metafields 
+   * @returns {Promise} Each api method returns a Promise that resolves with the result
+   */
+  customCollectionListAll(shopify, metafields) {
+    const itemsPerPage = 250;
+    return shopify.customCollection.count()
+    .then((count) => {
+      var pages = Math.round(count / itemsPerPage);
 
-    /**
-     * Custom Api implementation to get all customers at once without pagination
-     */
-    this.customer.listAll = (shopify, metafields) => {
-      const itemsPerPage = 250;
-      return shopify.customer.count()
-      .then((count) => {
-        var pages = Math.round(count / itemsPerPage);
+      // Are there any remaining items on the next page?
+      if(count % itemsPerPage > 0 ) {
+        pages++;
+      }
 
-        // Are there any remaining items on the next page?
-        if(count % itemsPerPage > 0 ) {
-          pages++;
-        }
+      if(pages <= 0) {
+        pages = 1;
+      }
 
-        if(pages <= 0) {
-          pages = 1;
-        }
+      this.debug("count", count);
+      this.debug("pages", pages);
 
-        this.debug('count', count);
-        this.debug('pages', pages);
-
-        return utilities.pTimes(pages, (n) => {
-          n += 1;
-          this.debug("page", n);
-          return shopify.customer.list({limit: itemsPerPage, page: n})
-        });
-      })
-      .then((itemsOfItems) => {
-        var items = utilities.flattenArrayOfArray(itemsOfItems);
-        return items;
+      return utilities.pTimes(pages, (n) => {
+        n += 1;
+        this.debug("page", n);
+        return shopify.customCollection.list({limit: itemsPerPage, page: n})
       });
-    }
-
-    /**
-     * Custom Api implementations for smartCollection 
-     */
-    this.smartCollection = {};
-
-    /**
-     * Custom Api implementation to get all smartCollection at once without pagination
-     */
-    this.smartCollection.listAll = (shopify, metafields) => {
-      const itemsPerPage = 250;
-      return shopify.smartCollection.count()
-      .then((count) => {
-        var pages = Math.round(count / itemsPerPage);
-
-        // Are there any remaining items on the next page?
-        if(count % itemsPerPage > 0 ) {
-          pages++;
-        }
-
-        if(pages <= 0) {
-          pages = 1;
-        }
-
-        this.debug("count", count);
-        this.debug("pages", pages);
-
-        return utilities.pTimes(pages, (n) => {
-          n += 1;
-          this.debug("page", n);
-          return shopify.smartCollection.list({limit: itemsPerPage, page: n})
-        });
-      })
-      .then((itemsOfItems) => {
-        var items = utilities.flattenArrayOfArray(itemsOfItems);
-        return items;
-      });
-    }
-
-    /**
-     * Custom Api implementations for customCollection 
-     */
-    this.customCollection = {};
-
-    /**
-     * Custom Api implementation to get all customCollection at once without pagination
-     */
-    this.customCollection.listAll = (shopify, metafields) => {
-      const itemsPerPage = 250;
-      return shopify.customCollection.count()
-      .then((count) => {
-        var pages = Math.round(count / itemsPerPage);
-
-        // Are there any remaining items on the next page?
-        if(count % itemsPerPage > 0 ) {
-          pages++;
-        }
-
-        if(pages <= 0) {
-          pages = 1;
-        }
-
-        this.debug("count", count);
-        this.debug("pages", pages);
-
-        return utilities.pTimes(pages, (n) => {
-          n += 1;
-          this.debug("page", n);
-          return shopify.customCollection.list({limit: itemsPerPage, page: n})
-        });
-      })
-      .then((itemsOfItems) => {
-        var items = utilities.flattenArrayOfArray(itemsOfItems);
-        return items;
-      });
-    }
-  };
+    })
+    .then((itemsOfItems) => {
+      var items = utilities.flattenArrayOfArray(itemsOfItems);
+      return items;
+    });
+  }
 
   /**
    * Get all params from koa-router query wich compatible with the shopify api
+   * 
+   * @param {string} jsonQueryString 
+   * @param {string[]} methodParsedArgs 
+   * @returns {Promise} Promise with resolves to an array with compatible params
    */
-  parseJsonQuery (jsonQueryString, methodParsedArgs) {
+  parseJsonQuery(jsonQueryString, methodParsedArgs) {
     return new Promise((fulfill, reject) => {
 
       const json = JSON.parse(jsonQueryString);
@@ -245,8 +247,12 @@ class Api {
   /**
    * Get shopify token from firebase
    * @see https://firebase.google.com/docs/auth/server/verify-id-tokens
+   * 
+   * @param {any} firebaseApp 
+   * @param {any} firebaseIdToken 
+   * @returns {Promise}
    */
-  getShopifyToken (firebaseApp, firebaseIdToken) {
+  getShopifyToken(firebaseApp, firebaseIdToken) {
     return firebaseApp.auth().verifyIdToken(firebaseIdToken)
     .then((firebaseUser) => {
       this.debug('firebaseUser', firebaseUser);
@@ -275,7 +281,11 @@ class Api {
   }
 
   /**
+   * Get a new instance of Shopify Api Class
    * 
+   * @param {string} shopName 
+   * @param {string} shopifyAccessToken 
+   * @returns {object} insteance of Shopify Api
    */
   init(shopName, shopifyAccessToken) {
     this.debug('init', 'shopName', shopName);
@@ -328,6 +338,12 @@ class Api {
    * app.listen(process.env.PORT || 8080);
    * ```
    * @requires koa-router, koa-json, koa-safe-jsonp
+   * 
+   * @param {object} opts options
+   * @param {any} app koa app instance
+   * @returns {object} koa router
+   * 
+   * @memberof Api
    */
   koa(opts, app) {
     const Router = require('koa-router'); // https://github.com/alexmingoia/koa-router/tree/master/
@@ -478,7 +494,7 @@ class Api {
 
     /**
      * Custom Api metafield/deleteAll implementation
-     * @see self.metafield.updateAll
+     * @see self.metafieldDeleteAll
      */
     var url = `${opts.baseUrl}/metafield/deleteAll`;
     self.debug(`init route: ${url}`);
@@ -507,7 +523,7 @@ class Api {
       // TODO: Do not init the api each request!
       const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
 
-      await self.metafield.deleteAll(shopify, params.ids)
+      await self.metafieldDeleteAll(shopify, params.ids)
       .then((metafields) => {
         ctx.jsonp = metafields;
       })
@@ -518,7 +534,7 @@ class Api {
 
     /**
      * Custom Api metafield/updateAll implementation
-     * @see self.metafield.updateAll
+     * @see self.metafieldUpdateAll
      */
     var url = `${opts.baseUrl}/metafield/updateAll`;
     self.debug(`init route: ${url}`);
@@ -547,7 +563,7 @@ class Api {
       // TODO: Do not init the api each request!
       const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
 
-      await self.metafield.updateAll(shopify, params.metafields)
+      await self.metafieldUpdateAll(shopify, params.metafields)
       .then((metafields) => {
         ctx.jsonp = metafields;
       })
@@ -558,7 +574,7 @@ class Api {
 
     /**
      * Custom Api product/listAll implementation
-     * @see self.product.listAll
+     * @see self.productListAll
      */
     var url = `${opts.baseUrl}/product/listAll`;
     self.debug(`init route: ${url}`);
@@ -574,7 +590,7 @@ class Api {
       // TODO: Do not init the api each request!
       const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
 
-      await self.product.listAll(shopify)
+      await self.productListAll(shopify)
       .then((results) => {
         ctx.jsonp = results;
       })
@@ -585,7 +601,7 @@ class Api {
 
     /**
      * Custom Api customer/listAll implementation
-     * @see self.customer.listAll
+     * @see self.customerListAll
      */
     var url = `${opts.baseUrl}/customer/listAll`;
     self.debug(`init route: ${url}`);
@@ -601,7 +617,7 @@ class Api {
       // TODO: Do not init the api each request!
       const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
 
-      await self.customer.listAll(shopify)
+      await self.customerListAll(shopify)
       .then((results) => {
         ctx.jsonp = results;
       })
@@ -612,7 +628,7 @@ class Api {
 
     /**
      * Custom Api smartCollection/listAll implementation
-     * @see self.smartCollection.listAll
+     * @see self.smartCollectionListAll
      */
     var url = `${opts.baseUrl}/smartCollection/listAll`;
     self.debug(`init route: ${url}`);
@@ -628,7 +644,7 @@ class Api {
       // TODO: Do not init the api each request!
       const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
 
-      await self.smartCollection.listAll(shopify)
+      await self.smartCollectionListAll(shopify)
       .then((results) => {
         ctx.jsonp = results;
       })
@@ -639,7 +655,7 @@ class Api {
 
     /**
      * Custom Api customCollection/listAll implementation
-     * @see self.customCollection.listAll
+     * @see self.customCollectionListAll
      */
     var url = `${opts.baseUrl}/customCollection/listAll`;
     self.debug(`init route: ${url}`);
@@ -655,7 +671,7 @@ class Api {
       // TODO: Do not init the api each request!
       const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
 
-      await self.customCollection.listAll(shopify)
+      await self.customCollectionListAll(shopify)
       .then((results) => {
         ctx.jsonp = results;
       })
@@ -710,4 +726,9 @@ class Api {
   }
 }
 
+/**
+ * Shopify api helpers
+ * @module shopify-server/api
+ * @see {@link Api}
+ */
 module.exports = Api;

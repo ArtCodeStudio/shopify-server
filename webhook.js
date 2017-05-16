@@ -17,9 +17,11 @@ class Webhook {
   constructor() {
     this.debug = new Debug('shopify-server:Webhook');
 
-    /*
+    /**
      * All avaiable webhook topics
      * @see https://help.shopify.com/api/reference/webhook
+     * @name Webhook#topics
+     * @type string[]
      */
     this.topics = [
       'carts/create',
@@ -280,4 +282,9 @@ class Webhook {
   };
 }
 
+/**
+ * shopify webhook helpers
+ * @module shopify-server/webhook
+ * @see {@link Webhook}
+ */
 module.exports = Webhook;

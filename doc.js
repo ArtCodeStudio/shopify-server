@@ -8,7 +8,7 @@ const server = json.parse(fs.readFileSync('doc-server.json').toString());
 const pkg = json.parse(fs.readFileSync('package.json').toString());
 server.path += '/'+pkg.name;
 
-/**
+/*!
  * Publish the docs path on the webserver
  */
 const publishDocFolder = () => {

@@ -7,6 +7,14 @@ const ShopifyToken = require('shopify-token');  // https://github.com/lpinca/sho
 const Debug = require('debug');                 // https://github.com/visionmedia/debug
 const utilities = require('./utilities.js');
 
+/**
+ * Shopify authentication helpers
+ *
+ * @see https://firebase.googleblog.com/2016/10/authenticate-your-firebase-users-with.html
+ * @see https://github.com/firebase/custom-auth-samples
+ * @see http://gavinballard.com/shopify-oauth-flow-for-dummies/
+ * @see https://firebase.google.com/docs/cli/
+ */
 class Auth {
 
   /**
@@ -17,8 +25,10 @@ class Auth {
   }
 
   /**
-   * @param appName
-   * @param shopifyConfig
+   * Get a new instance of Shopify Token Object
+   * 
+   * @param {object} shopifyConfig 
+   * @returns {object}
    */
   init(shopifyConfig) {
     this.debug('init', 'shopifyConfig', shopifyConfig);
@@ -27,7 +37,12 @@ class Auth {
 
   /**
    * Creates a Firebase custom auth token for the given Shopify user ID.
-   * @callback The Firebase custom auth token and the uid.
+   * 
+   * @param {object} firebaseApp 
+   * @param {string} appName 
+   * @param {string} shop 
+   * @param {function} cb  The Firebase custom auth token and the uid.
+   * @returns {Promise} Promise with resolves to firebase the custom token
    */
   createFirebaseCustomAuth (firebaseApp, appName, shop, cb) {
     // The UID we'll assign to the user.
@@ -58,6 +73,15 @@ class Auth {
    *  - Updates the user profile with shop
    *  - Saves the Shopify AccessToken to the Realtime Database
    *  - Closes the popup
+   * 
+   * @param {string} shop 
+   * @param {string} appName 
+   * @param {string} shopifyAccessToken 
+   * @param {string} shopifyApiKey 
+   * @param {string} firebaseToken 
+   * @param {number} firebaseProjectId 
+   * @param {string} firebaseApiKey 
+   * @returns {string} html template string 
    */
   signInFirebaseTemplate(shop, appName, shopifyAccessToken, shopifyApiKey, firebaseToken, firebaseProjectId, firebaseApiKey) {
     return `
@@ -135,6 +159,9 @@ class Auth {
    * app.listen(process.env.PORT || 8080);
    * 
    * @requires koa-router, koa-json, koa-safe-jsonp
+   * @param {object} opts options
+   * @param {object} app koa app instance
+   * @returns {object} koa router middleware
    */
   koa(opts, app) {
     const Router = require('koa-router'); // https://github.com/alexmingoia/koa-router/tree/master/
@@ -290,4 +317,9 @@ class Auth {
   }
 }
 
+/**
+ * shopify authentication helpers
+ * @module shopify-server/auth
+ * @see {@link Auth}
+ */
 module.exports = Auth;

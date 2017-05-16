@@ -52,7 +52,12 @@ class Admin {
             });
         });
     };
-
 }
 
+/**
+ * Admin stuff, e.g list all shops where the app is installed,
+ * so this should not be accessable by single app users, just for admins
+ * @module shopify-server/admin
+ * @see {@link Admin}
+ */
 module.exports = Admin;
