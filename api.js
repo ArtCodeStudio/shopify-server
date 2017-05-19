@@ -293,7 +293,6 @@ class Api {
       shopName: shopName,
       accessToken: shopifyAccessToken,
     });
-    this.debug('HEEELAU!!!');
     // Quick dirty hack to include 'listAll' method generically
     var definitions = require('./definitions.js')({});
     this.debug('DEFINITIONS:', definitions);
@@ -302,7 +301,7 @@ class Api {
       utilities.forEach(resource, (methodName, method, next) => {
         this.debug(`methodName: ${methodName}`);
         if (methodName === 'listAll') {
-          this.debug(`DEFINE api()['${resourceName}']['${methodName}All']`);
+          this.debug(`DEFINE api()['${resourceName}']['listAll']`);
           // if 'list' method exists, we implement 'listAll' in this generic manner
           ret[resourceName].listAll = () => {
             var args = [];
@@ -631,18 +630,6 @@ class Api {
     * Init all routes for the Shopify REST API based on Shopify-api-node
     * @see https://github.com/microapps/Shopify-api-node
     */
-
-    // Quick dirty hack to include 'listAll' method generically
-    utilities.forEach(self.definitions, (resourceName, resource, next) => {
-      utilities.forEach(resource, (methodName, method, next) => {
-        if (methodName === 'list') {
-        // simply copy definition for 'list' to 'listAll'; implementation happens in Api.init
-          self.definitions[resourceName].listAll=self.definitions[resourceName].list;
-        }
-        next();
-      });
-      next();
-    });
 
     utilities.forEach(self.definitions, (resourceName, resource, next) => {
       utilities.forEach(resource, (methodName, method, next) => {
