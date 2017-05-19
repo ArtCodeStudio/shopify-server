@@ -17,7 +17,8 @@ class Api {
    * Creates an instance of Api
    */
   constructor() {
-    this.debug = new Debug('shopify-server:admin');
+    this.debug = new Debug('shopify-server:api');
+    this.debug("hallodri");
   }
 
   /**
@@ -289,10 +290,65 @@ class Api {
    */
   init(shopName, shopifyAccessToken) {
     this.debug('init', 'shopName', shopName);
-    return new ShopifyApi({
+    var ret = new ShopifyApi({
       shopName: shopName,
       accessToken: shopifyAccessToken,
     });
+    this.debug('HEEELAU!!!');
+    // Quick dirty hack to include 'listAll' method generically
+    var definitions = require('./definitions.js')({});
+    this.debug('DEFINITIONS:', definitions);
+    utilities.forEach(definitions, (resourceName, resource, next) => {
+      this.debug(`resource: ${resourceName}`);
+      utilities.forEach(resource, (methodName, method, next) => {
+        this.debug(`methodName: ${methodName}`);
+        if (methodName === 'list') {
+          this.debug(`DEFINE api()['${resourceName}']['${methodName}All']`);
+          // if 'list' method exists, we implement 'listAll' in this generic manner
+          ret[resourceName].listAll = () => {
+            var args = [];
+            var arglen = 0;
+            var arglist = method.args;
+            for (var i=0; i<arglist.length && i < arguments.length; i++) {
+              if (arglist[i][0] === '(' || arglist[i] === 'params')
+                break;
+              args.push(arguments[i]);
+              arglen++;
+            }
+            const itemsPerPage = 250;
+            return ret[resourceName].count()
+            .then((count) => {
+              var pages = Math.round(count / itemsPerPage);
+
+              // Are there any remaining items on the next page?
+              if(count % itemsPerPage > 0 ) {
+                pages++;
+              }
+
+              if(pages <= 0) {
+                pages = 1;
+              }
+
+              this.debug("count", count);
+              this.debug("pages", pages);
+
+              return utilities.pTimes(pages, (n) => {
+                n += 1;
+                this.debug("page", n);
+                return ret[resourceName].list(...args, {limit: itemsPerPage, page: n})
+              });
+            })
+            .then((itemsOfItems) => {
+              var items = utilities.flattenArrayOfArray(itemsOfItems);
+              return items;
+            });
+          };
+        }
+        next();
+      });
+      next();
+    });
+    return ret;
   }
 
   /**
@@ -572,118 +628,23 @@ class Api {
       });
     });
 
-    /**
-     * Custom Api product/listAll implementation
-     * @see self.productListAll
-     */
-    var url = `${opts.baseUrl}/product/listAll`;
-    self.debug(`init route: ${url}`);
-    router.get(url, async (ctx) => {
-      const appName = opts.appName;
-      const shopName = ctx.params.shopName;
-      const session = ctx[opts.contextStorageKey];
-
-      if(!session[appName] || !session[appName][shopName] || !session[appName][shopName].shopifyToken) {
-        ctx.throw(401, 'Shopify Token not set');
-      }
-
-      // TODO: Do not init the api each request!
-      const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
-
-      await self.productListAll(shopify)
-      .then((results) => {
-        ctx.jsonp = results;
-      })
-      .catch((error) => {
-        ctx.throw(500, error);
-      });
-    });
-
-    /**
-     * Custom Api customer/listAll implementation
-     * @see self.customerListAll
-     */
-    var url = `${opts.baseUrl}/customer/listAll`;
-    self.debug(`init route: ${url}`);
-    router.get(url, async (ctx) => {
-      const appName = opts.appName;
-      const shopName = ctx.params.shopName;
-      const session = ctx[opts.contextStorageKey];
-
-      if(!session[appName] || !session[appName][shopName] || !session[appName][shopName].shopifyToken) {
-        ctx.throw(401, 'Shopify Token not set');
-      }
-
-      // TODO: Do not init the api each request!
-      const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
-
-      await self.customerListAll(shopify)
-      .then((results) => {
-        ctx.jsonp = results;
-      })
-      .catch((error) => {
-        ctx.throw(500, error);
-      });
-    });
-
-    /**
-     * Custom Api smartCollection/listAll implementation
-     * @see self.smartCollectionListAll
-     */
-    var url = `${opts.baseUrl}/smartCollection/listAll`;
-    self.debug(`init route: ${url}`);
-    router.get(url, async (ctx) => {
-      const appName = opts.appName;
-      const shopName = ctx.params.shopName;
-      const session = ctx[opts.contextStorageKey];
-
-      if(!session[appName] || !session[appName][shopName] || !session[appName][shopName].shopifyToken) {
-        ctx.throw(401, 'Shopify Token not set');
-      }
-
-      // TODO: Do not init the api each request!
-      const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
-
-      await self.smartCollectionListAll(shopify)
-      .then((results) => {
-        ctx.jsonp = results;
-      })
-      .catch((error) => {
-        ctx.throw(500, error);
-      });
-    });
-
-    /**
-     * Custom Api customCollection/listAll implementation
-     * @see self.customCollectionListAll
-     */
-    var url = `${opts.baseUrl}/customCollection/listAll`;
-    self.debug(`init route: ${url}`);
-    router.get(url, async (ctx) => {
-      const appName = opts.appName;
-      const shopName = ctx.params.shopName;
-      const session = ctx[opts.contextStorageKey];
-
-      if(!session[appName] || !session[appName][shopName] || !session[appName][shopName].shopifyToken) {
-        ctx.throw(401, 'Shopify Token not set');
-      }
-
-      // TODO: Do not init the api each request!
-      const shopify = self.init(shopName, session[appName][shopName].shopifyToken);
-
-      await self.customCollectionListAll(shopify)
-      .then((results) => {
-        ctx.jsonp = results;
-      })
-      .catch((error) => {
-        ctx.throw(500, error);
-      });
-    });
-
     /*
     * Init all routes for the Shopify REST API based on Shopify-api-node
     * @see https://github.com/microapps/Shopify-api-node
     */
+
+    // Quick dirty hack to include 'listAll' method generically
+    utilities.forEach(self.definitions, (resourceName, resource, next) => {
+      utilities.forEach(resource, (methodName, method, next) => {
+        if (methodName === 'list') {
+        // simply copy definition for 'list' to 'listAll'; implementation happens in Api.init
+          self.definitions[resourceName].listAll=self.definitions[resourceName].list;
+        }
+        next();
+      });
+      next();
+    });
+
     utilities.forEach(self.definitions, (resourceName, resource, next) => {
       utilities.forEach(resource, (methodName, method, next) => {
         self.debug(`init route: ${method.url}`, method.args);
