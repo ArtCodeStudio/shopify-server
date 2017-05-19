@@ -1,5 +1,9 @@
   'use strict';
 module.exports = (opts) => {
+  if(typeof(opts) === undefined) {
+    opts = {};
+  }
+
   if(typeof(opts.appName) !== 'string') {
     opts.appName = 'shopify-app';
   }
@@ -33,11 +37,11 @@ module.exports = (opts) => {
       delete: {args: ['blogId', 'id'], needScope: 'write_content'},
       get: {args: ['blogId', 'id', '(params)'], needScope: 'read_content'},
       list: {args: ['blogId', '(params)'], needScope: 'read_content'},
-      tags: {args: ['(blogId), (params)'], needScope: 'read_content'},
+      tags: {args: ['(blogId)', '(params)'], needScope: 'read_content'},
       update: {args: ['blogId', 'id', 'params'], needScope: 'write_content'},
     },
     asset: {
-      create: {args: ['themeId', 'params', 'params'], needScope: 'write_themes'},
+      create: {args: ['themeId', 'params'], needScope: 'write_themes'},
       delete: {args: ['themeId', 'params'], needScope: 'write_themes'},
       get: {args: ['themeId', 'params'], needScope: 'read_themes'},
       list: {args: ['themeId', '(params)'], needScope: 'read_themes'},
@@ -376,6 +380,7 @@ module.exports = (opts) => {
               name: method.args[i],
               position: i,
               isOptional: false,
+              type: 'object',
             };
 
             let lastCharIndex = arg.name.length - 1;
@@ -386,6 +391,22 @@ module.exports = (opts) => {
               arg.name = arg.name.substring(1, lastCharIndex);
               arg.isOptional = true;
             }
+
+            switch(arg.name) {
+              case 'id':
+              case 'id':
+              break;
+            }
+
+            lastCharIndex = arg.name.length - 1;
+            lastChar = arg.name.charAt(lastCharIndex);
+            let nextToLastChar = arg.name.charAt(lastCharIndex - 1);
+
+            // if argName is id or ends with ID
+            if(arg.name === 'id' || (nextToLastChar === 'I' && lastChar === 'd' )) {
+              arg.type = 'number';
+            }
+
             method.parsedArgs.push(arg);
           }
 
