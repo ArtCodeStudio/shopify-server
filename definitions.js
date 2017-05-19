@@ -388,7 +388,17 @@ module.exports = (opts) => {
             }
             method.parsedArgs.push(arg);
           }
+
           definitions.debug(`\t${resourceName}.${methodName}(${method.args}) -> ${method.url}\n`, method);
+
+          // add listAll definitions
+          if(methodName === 'list') {
+            let listAllMethod = Object.assign({}, method); // copy method
+            listAllMethod.url = `${opts.baseUrl}/${resourceName}/listAll`;
+            definitions.api[resourceName].listAll = listAllMethod;
+
+            definitions.debug(`\t${resourceName}.listAll(${listAllMethod.args}) -> ${listAllMethod.url}\n`, listAllMethod);
+          }
         }
       }
     }

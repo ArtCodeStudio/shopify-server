@@ -296,8 +296,7 @@ class Auth {
     })
 
     /**
-    * Get token
-    * TODO Is this safe through sessions?
+    * Get firebase token
     */
     .get(`${opts.baseUrl}/:shopName/token`, (ctx) => {
       const appName = opts.appName;

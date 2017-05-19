@@ -18,7 +18,6 @@ class Api {
    */
   constructor() {
     this.debug = new Debug('shopify-server:api');
-    this.debug("hallodri");
   }
 
   /**
@@ -302,7 +301,7 @@ class Api {
       this.debug(`resource: ${resourceName}`);
       utilities.forEach(resource, (methodName, method, next) => {
         this.debug(`methodName: ${methodName}`);
-        if (methodName === 'list') {
+        if (methodName === 'listAll') {
           this.debug(`DEFINE api()['${resourceName}']['${methodName}All']`);
           // if 'list' method exists, we implement 'listAll' in this generic manner
           ret[resourceName].listAll = () => {
